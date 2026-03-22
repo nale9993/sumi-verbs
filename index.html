@@ -659,6 +659,7 @@ const D = {
   wrong:   0,
   index:   0,
   total:   10,
+  results: [],     // 'correct'|'wrong' per answered question
   queue:   [],     // phase2 only
   p2Scores: {},    // phase2 only: { formId: { correct, total } }
 };
@@ -669,14 +670,15 @@ const D = {
 function startPhase1(formId) {
   const form = FORMS.find(f => f.id === formId);
   D.type = 'phase1'; D.formId = formId; D.form = form;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = 10; D.usedVerbs = [];
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = 10; D.usedVerbs = []; D.results = [];
   D.queue = []; D.p2Scores = {};
 
   // Resume partial session
   if (savedSess?.type === 'phase1' && savedSess?.formId === formId && savedSess.index < 10) {
-    D.correct = savedSess.correct;
-    D.wrong   = savedSess.wrong;
-    D.index   = savedSess.index;
+    D.correct  = savedSess.correct;
+    D.wrong    = savedSess.wrong;
+    D.index    = savedSess.index;
+    D.results  = savedSess.results || [];
   }
   savedSess = null; SS('sv-ss', null);
 
@@ -690,7 +692,7 @@ function startFinal(formId) {
   const form  = FORMS.find(f => f.id === formId);
   const total = Math.max(20, form.groups.length * 4);
   D.type = 'final'; D.formId = formId; D.form = form;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = total; D.usedVerbs = [];
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = total; D.usedVerbs = []; D.results = [];
   D.queue = []; D.p2Scores = {};
 
   document.getElementById('drillLabel').textContent = form.name;
@@ -704,7 +706,7 @@ function startPhase2() {
   if (!config) return;
 
   D.type = 'phase2'; D.formId = null; D.form = null;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length; D.usedVerbs = [];
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length; D.usedVerbs = []; D.results = [];
   D.queue = config.queue; D.p2Scores = {};
 
   // Init per-form score trackers
@@ -720,17 +722,15 @@ function startPhase2() {
 }
 
 function initDrillView(total, startIndex) {
-  // Build pips
   const pc = document.getElementById('drillProgress');
   pc.innerHTML = '';
   for (let i = 0; i < total; i++) {
     const pip = document.createElement('div');
     pip.className = 'progress-pip';
+    // Restore pip color if this question was already answered
+    if (D.results[i]) pip.classList.add(D.results[i]);
     pc.appendChild(pip);
   }
-  // Mark already-answered pips if resuming
-  const pips = pc.querySelectorAll('.progress-pip');
-  // (can't know past results from saved session, just leave them blank)
 
   document.getElementById('drillCorrect').textContent   = D.correct;
   document.getElementById('drillWrong').textContent     = D.wrong;
@@ -822,7 +822,7 @@ Draw from this diverse verb pool and vary widely — do NOT repeat the same verb
 う-verbs (る): 帰る(かえる), 取る(とる), 乗る(のる), 知る(しる), 作る(つくる), 売る(うる), 切る(きる), 送る(おくる), 降る(ふる), 走る(はしる), 太る(ふとる), 泊まる(とまる), 始まる(はじまる), 終わる(おわる)
 う-verbs (ぬ・ぶ・む): 飲む(のむ), 読む(よむ), 住む(すむ), 休む(やすむ), 遊ぶ(あそぶ), 呼ぶ(よぶ), 運ぶ(はこぶ), 飛ぶ(とぶ), 死ぬ(しぬ), 頼む(たのむ), 選ぶ(えらぶ), 楽しむ(たのしむ), 込む(こむ)
 Irregular: する, くる, 勉強する(べんきょうする), 運動する(うんどうする), 料理する(りょうりする), 電話する(でんわする), 結婚する(けっこんする), 掃除する(そうじする), 練習する(れんしゅうする), 旅行する(りょこうする)`,
-        messages:[{role:'user', content:`Form: ${form.name}. Draw from subgroup(s): ${groupContext}.${polarityNote}${usedNote} Generate one natural sentence drill.`}]
+        messages:[{role:'user', content:`Conjugation form to drill: ${form.name}. The answer MUST be in ${form.name} — no other conjugation form is acceptable. Verb subgroup to draw from: ${groupContext}.${polarityNote}${usedNote} Generate one sentence drill.`}]
       })
     });
     const data  = await res.json();
@@ -883,6 +883,7 @@ function checkAnswer() {
   }
 
   D.index++;
+  D.results.push(correct ? 'correct' : 'wrong');
   const pips = document.querySelectorAll('.progress-pip');
   if (pips[ci]) pips[ci].classList.add(correct ? 'correct' : 'wrong');
 
@@ -935,7 +936,7 @@ function showDrillView() {
 function exitDrill() {
   // Save partial phase1/final session
   if (D.type === 'phase1' || D.type === 'final') {
-    SS('sv-ss', { type: D.type, formId: D.formId, correct: D.correct, wrong: D.wrong, index: D.index });
+    SS('sv-ss', { type: D.type, formId: D.formId, correct: D.correct, wrong: D.wrong, index: D.index, results: D.results });
   }
   document.getElementById('mainTabBar').style.display = '';
   switchTab('practice');
