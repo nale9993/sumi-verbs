@@ -657,6 +657,7 @@ const D = {
   form:    null,
   answer:  null,
   answerKana: null,
+  answered: false,
   correct: 0,
   wrong:   0,
   index:   0,
@@ -752,53 +753,89 @@ async function fetchSentence() {
   sc.style.display = 'none';
   ia.style.display = 'none';
 
-  let form, groupContext, newestGroupName;
-
-  // Maps form+group to exact conjugation rule description for the AI
+  // Maps group id → exact conjugation rule for the AI
   const CONJ_RULES = {
     'te-ru':  'て-form of a る-verb: drop る, add て. E.g. 食べる→食べて',
-    'te-ku':  'て-form of a く-ending う-verb: く→いて. E.g. 書く→書いて. Exception: 行く→行って',
+    'te-ku':  'て-form of a く-ending う-verb: く→いて. Exception: 行く→行って',
     'te-gu':  'て-form of a ぐ-ending う-verb: ぐ→いで. E.g. 泳ぐ→泳いで',
     'te-su':  'て-form of a す-ending う-verb: す→して. E.g. 話す→話して',
-    'te-tsu': 'て-form of a つ/う/る-ending う-verb: →って. E.g. 待つ→待って, 買う→買って, 帰る→帰って',
-    'te-mu':  'て-form of a ぬ/ぶ/む-ending う-verb: →んで. E.g. 飲む→飲んで, 遊ぶ→遊んで',
+    'te-tsu': 'て-form of a つ/う/る(godan) う-verb: →って. E.g. 待つ→待って, 買う→買って, 帰る→帰って',
+    'te-mu':  'て-form of a ぬ/ぶ/む う-verb: →んで. E.g. 飲む→飲んで, 遊ぶ→遊んで',
     'te-irr': 'て-form of する or くる: する→して, くる→きて',
     'nai-ru': 'ない-form of a る-verb: drop る, add ない. E.g. 食べる→食べない',
-    'nai-u':  'ない-form of a う-verb: shift to あ-row + ない. Exception: う-ending verbs use わない not あない. E.g. 書く→書かない, 買う→買わない',
+    'nai-u':  'ない-form of a う-verb: shift to あ-row + ない. う-ending exception: →わない. E.g. 書く→書かない, 買う→買わない',
     'nai-irr':'ない-form of する or くる: する→しない, くる→こない',
-    'tai-all':'たい-form (want to): attach たい to the ます-stem. E.g. 食べる→食べたい, 飲む→飲みたい',
-    'tai-neg':'たくない-form (don\'t want to): ます-stem + たくない. E.g. 食べる→食べたくない, 行く→行きたくない',
+    'tai-all':'たい form (I want to ~): ます-stem + たい. E.g. 食べる→食べたい, 飲む→飲みたい',
+    'tai-neg':'たくない form (I don\'t want to ~): ます-stem + たくない. E.g. 食べる→食べたくない',
   };
 
+  let form;
   if (D.type === 'phase2') {
-    const qi = D.queue[D.index];
-    form = qi.form;
-    const st = getState(form.id);
-    const allGroups = form.groups.filter(g => st.unlockedGroupIds.includes(g.id));
-    groupContext = allGroups.map(g => CONJ_RULES[g.id] || g.name).join(' OR ');
+    form = D.queue[D.index].form;
   } else {
     form = D.form;
-    const st = getState(form.id);
-    const allGroups = form.groups.filter(g => st.unlockedGroupIds.includes(g.id));
-    newestGroupName = allGroups[allGroups.length - 1]?.id;
-    // 50% weight toward newest group
-    let targetGroups;
-    if (allGroups.length > 1 && Math.random() < 0.5) {
-      targetGroups = [allGroups[allGroups.length - 1]];
-    } else {
-      targetGroups = allGroups;
-    }
-    groupContext = targetGroups.map(g => CONJ_RULES[g.id] || g.name).join(' OR ');
   }
 
-  // Show current form in drill sub for phase2
+  // Show form name in sub-label for phase2
   if (D.type === 'phase2') {
-    document.getElementById('drillSub').textContent = form.name + ' · ' + D.queue[D.index].formId;
+    document.getElementById('drillSub').textContent = form.name;
   }
 
-  // Track used verbs to avoid repeats within a session
-  if (!D.usedVerbs) D.usedVerbs = [];
-  const usedNote = D.usedVerbs.length ? ` Avoid these verbs already used: ${D.usedVerbs.join(', ')}.` : '';
+  // Client-side verb pools per group — pick one randomly to give the AI a concrete verb
+  const VERB_POOLS = {
+    'te-ru':  ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','閉める','借りる','疲れる','続ける','始める','答える'],
+    'te-ku':  ['書く','聞く','歩く','働く','行く','置く','焼く','引く'],
+    'te-gu':  ['泳ぐ','急ぐ','脱ぐ','稼ぐ'],
+    'te-su':  ['話す','貸す','探す','返す','出す','直す','消す'],
+    'te-tsu': ['待つ','持つ','買う','使う','歌う','笑う','会う','思う','払う','帰る','取る','乗る','作る','走る','泊まる'],
+    'te-mu':  ['飲む','読む','住む','休む','遊ぶ','呼ぶ','運ぶ','飛ぶ','頼む','選ぶ','楽しむ'],
+    'te-irr': ['する','くる','勉強する','運動する','料理する','電話する','掃除する','練習する'],
+    'nai-ru': ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','借りる','疲れる','始める'],
+    'nai-u':  ['書く','話す','待つ','買う','飲む','読む','遊ぶ','帰る','取る','使う','思う','走る','急ぐ'],
+    'nai-irr':['する','くる','勉強する','運動する','料理する','掃除する','練習する'],
+    'tai-all':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','旅行する'],
+    'tai-neg':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','働く'],
+  };
+
+  // Pick a random unused verb for the target group
+  function pickVerb(groupId) {
+    const pool = VERB_POOLS[groupId] || VERB_POOLS['te-ru'];
+    const unused = pool.filter(v => !D.usedVerbs.includes(v));
+    const src = unused.length ? unused : pool;
+    return src[Math.floor(Math.random() * src.length)];
+  }
+
+  // Determine which group to target this question
+  const st = getState(form.id);
+  const allGroups = form.groups.filter(g => st && st.unlockedGroupIds.includes(g.id));
+  let targetGroup;
+  if (D.type === 'phase2') {
+    const qi = D.queue[D.index];
+    targetGroup = form.groups[form.groups.length - 1]; // use last unlocked as default
+    // find group from queue item's formId context
+    const qst = getState(qi.form.id);
+    const qGroups = qi.form.groups.filter(g => qst && qst.unlockedGroupIds.includes(g.id));
+    // 50% newest, 50% random from all
+    targetGroup = (qGroups.length > 1 && Math.random() < 0.5)
+      ? qGroups[qGroups.length - 1]
+      : qGroups[Math.floor(Math.random() * qGroups.length)];
+  } else {
+    // 50% weight newest group
+    if (allGroups.length > 1 && Math.random() < 0.5) {
+      targetGroup = allGroups[allGroups.length - 1];
+    } else {
+      targetGroup = allGroups[Math.floor(Math.random() * allGroups.length)];
+    }
+  }
+
+  const chosenVerb = pickVerb(targetGroup?.id || 'te-ru');
+  const conjRule   = CONJ_RULES[targetGroup?.id] || targetGroup?.name || '';
+
+  const userMsg = `Conjugation rule: ${conjRule}
+Use this specific verb: ${chosenVerb}
+Generate one sentence drill where the blank contains this verb conjugated using the rule above. Use natural N5-N4 Japanese for the rest of the sentence.`;
+
+  const usedNote = '';
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -806,38 +843,18 @@ async function fetchSentence() {
       body: JSON.stringify({
         model:'claude-sonnet-4-20250514', max_tokens:1000,
         system:`You are a Japanese verb conjugation drill generator for JLPT N5-N4 learners.
-Respond ONLY with valid JSON — no markdown, no preamble:
+Respond ONLY with a valid JSON object, no markdown, no extra text:
 {
-  "sentenceParts":["before blank","after blank"],
-  "englishSentence":"Complete natural English translation.",
-  "nuanceHint":"Short parenthetical hint ONLY for passive/causative/conditional where English grammar reveals the Japanese form. Empty string for all other forms.",
-  "answer":"correct conjugated form in natural kana/kanji",
-  "answerKana":"correct conjugated form in PURE HIRAGANA only — no kanji at all",
-  "verbDictionary":"dictionary form",
-  "verbFurigana":"(hiragana reading)"
+  "sentenceParts": ["text before blank", "text after blank"],
+  "englishSentence": "full natural English translation of the complete sentence",
+  "nuanceHint": "short parenthetical nuance note for passive/causative/conditional only, else empty string",
+  "answer": "conjugated verb in natural kana/kanji",
+  "answerKana": "conjugated verb in pure hiragana only — NO kanji",
+  "verbDictionary": "dictionary form",
+  "verbFurigana": "(hiragana reading of dictionary form)"
 }
-
-Rules:
-- sentenceParts: exactly 2 strings — text before and after the blank. The blank replaces only the conjugated verb.
-- englishSentence: a complete natural English sentence. Never name the grammar form.
-- nuanceHint: only for passive, causative, or conditional forms. Empty string "" for all others.
-- answer: the conjugated verb in natural kana/kanji as it would appear in writing.
-- answerKana: the SAME conjugated verb but written in pure hiragana only — convert any kanji to hiragana. E.g. if answer is 食べて, answerKana is たべて. If answer is 書いて, answerKana is かいて.
-- verbDictionary: the verb in plain dictionary form.
-- verbFurigana: hiragana reading in parentheses, e.g. (いく).
-- N5-N4 vocabulary only for surrounding words.
-
-Draw from this diverse verb pool and vary widely — do NOT repeat the same verb twice in a session:
-る-verbs: 食べる(たべる), 見る(みる), 起きる(おきる), 寝る(ねる), 着る(きる), 教える(おしえる), 覚える(おぼえる), 忘れる(わすれる), 出る(でる), 入れる(いれる), 開ける(あける), 閉める(しめる), 決める(きめる), 借りる(かりる), 降りる(おりる), 疲れる(つかれる), 続ける(つづける), 始める(はじめる), 答える(こたえる), 集める(あつめる)
-う-verbs (く): 書く(かく), 聞く(きく), 歩く(あるく), 働く(はたらく), 行く(いく)※exception→行って, 置く(おく), 焼く(やく), 引く(ひく), 咲く(さく)
-う-verbs (ぐ): 泳ぐ(およぐ), 急ぐ(いそぐ), 脱ぐ(ぬぐ), 稼ぐ(かせぐ)
-う-verbs (す): 話す(はなす), 貸す(かす), 探す(さがす), 返す(かえす), 出す(だす), 直す(なおす), 消す(けす)
-う-verbs (つ): 待つ(まつ), 持つ(もつ), 勝つ(かつ), 打つ(うつ), 立つ(たつ)
-う-verbs (う): 買う(かう), 使う(つかう), 習う(ならう), 歌う(うたう), 笑う(わらう), 手伝う(てつだう), 会う(あう), 言う(いう), 思う(おもう), 払う(はらう)
-う-verbs (る): 帰る(かえる), 取る(とる), 乗る(のる), 知る(しる), 作る(つくる), 売る(うる), 切る(きる), 送る(おくる), 走る(はしる), 泊まる(とまる), 終わる(おわる)
-う-verbs (ぬ・ぶ・む): 飲む(のむ), 読む(よむ), 住む(すむ), 休む(やすむ), 遊ぶ(あそぶ), 呼ぶ(よぶ), 運ぶ(はこぶ), 飛ぶ(とぶ), 死ぬ(しぬ), 頼む(たのむ), 選ぶ(えらぶ), 楽しむ(たのしむ)
-Irregular: する, くる, 勉強する(べんきょうする), 運動する(うんどうする), 料理する(りょうりする), 電話する(でんわする), 掃除する(そうじする), 練習する(れんしゅうする), 旅行する(りょこうする)`,
-        messages:[{role:'user', content:`Conjugation rule: ${groupContext}.${usedNote} Generate one sentence drill where the blank uses exactly this conjugation.`}]
+The blank in sentenceParts replaces only the conjugated verb. The englishSentence is the full sentence translated naturally. answerKana must be pure hiragana — if answer contains kanji, write the hiragana reading instead.`,
+        messages:[{role:'user', content: userMsg}]
       })
     });
     const data  = await res.json();
@@ -863,6 +880,8 @@ Irregular: する, くる, 勉強する(べんきょうする), 運動する(う
   inp.value = ''; inp.className = 'answer-input'; inp.focus();
   document.getElementById('feedback').className = 'feedback';
   document.getElementById('nextBtn').className  = 'next-btn';
+  document.getElementById('submitBtn').disabled = false;
+  D.answered = false;
   inp.onkeydown = e => { if(e.key==='Enter') checkAnswer(); };
 }
 
@@ -879,16 +898,31 @@ function renderCard(item) {
 // CHECK / NEXT
 // ════════════════════════════════════════════
 function checkAnswer() {
-  const inp   = document.getElementById('answerInput');
-  const fb    = document.getElementById('feedback');
-  const nb    = document.getElementById('nextBtn');
+  if (D.answered) return;  // prevent double-press
+  const inp    = document.getElementById('answerInput');
+  const fb     = document.getElementById('feedback');
+  const nb     = document.getElementById('nextBtn');
   const rawAns = inp.value.trim();
   if (!rawAns) return;
-  // Convert romaji to hiragana for comparison; compare against pure-hiragana answer
-  const inputKana = (typeof wanakana !== 'undefined') ? wanakana.toHiragana(rawAns) : rawAns;
-  const ci        = D.index;
-  // Accept if input matches hiragana version OR the direct answer (for Japanese IME input)
-  const correct   = inputKana === (D.answerKana || D.answer) || rawAns === D.answer;
+
+  D.answered = true;
+  document.getElementById('submitBtn').disabled = true;
+
+  // Normalize: convert romaji → hiragana, strip any remaining kanji via wanakana
+  const toKana = (s) => {
+    if (typeof wanakana === 'undefined') return s;
+    // If fully romaji, convert; otherwise leave kana as-is
+    return wanakana.isRomaji(s) ? wanakana.toHiragana(s) : wanakana.toHiragana(s);
+  };
+
+  const inputKana = toKana(rawAns);
+  // answerKana comes from API (pure hiragana). As safety net, also convert it.
+  const targetKana = typeof wanakana !== 'undefined'
+    ? wanakana.toHiragana(D.answerKana || D.answer)
+    : (D.answerKana || D.answer);
+
+  const ci      = D.index;
+  const correct = inputKana === targetKana || rawAns === D.answer;
 
   if (correct) {
     inp.classList.add('correct');
@@ -912,7 +946,7 @@ function checkAnswer() {
   document.getElementById('drillRemaining').textContent = D.total - D.index;
 
   nb.className = 'next-btn visible';
-  inp.onkeydown = e => { if(e.key==='Enter') nextQuestion(); };
+  inp.onkeydown = e => { if (e.key === 'Enter') nextQuestion(); };
 }
 
 function nextQuestion() {
