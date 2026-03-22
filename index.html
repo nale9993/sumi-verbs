@@ -838,52 +838,92 @@ Generate one sentence drill where the blank contains this verb conjugated using 
 
   const usedNote = '';
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-20250514', max_tokens:1000,
-        system:`You are a Japanese verb conjugation drill generator for JLPT N5-N4 learners.
-Respond ONLY with a valid JSON object, no markdown, no extra text:
-{
-  "sentenceParts": ["text before blank", "text after blank"],
-  "englishSentence": "full natural English translation of the complete sentence",
-  "nuanceHint": "short parenthetical nuance note for passive/causative/conditional only, else empty string",
-  "answer": "conjugated verb in natural kana/kanji",
-  "answerKana": "conjugated verb in pure hiragana only — NO kanji",
-  "verbDictionary": "dictionary form",
-  "verbFurigana": "(hiragana reading of dictionary form)"
-}
-The blank in sentenceParts replaces only the conjugated verb. The englishSentence is the full sentence translated naturally. answerKana must be pure hiragana — if answer contains kanji, write the hiragana reading instead.`,
-        messages:[{role:'user', content: userMsg}]
-      })
-    });
-    const data  = await res.json();
-    if (!res.ok) throw new Error(`API ${res.status}: ${JSON.stringify(data)}`);
-    const raw   = data.content.map(b => b.text||'').join('');
-    console.log('API raw:', raw);
-    const clean = raw.replace(/^[\s\S]*?(\{)/,'$1').replace(/\}[\s\S]*$/,'}'); // extract first JSON object
-    const item  = JSON.parse(clean);
-    D.answer     = item.answer;
-    D.answerKana = item.answerKana || item.answer;
-    // Pre-compute romaji of answer for comparison
-    D.answerRomaji = typeof wanakana !== 'undefined' ? wanakana.toRomaji(D.answerKana).toLowerCase().replace(/\s/g,'') : '';
+  // Helper: parse JSON tolerantly from a raw string
+  function parseJSON(raw) {
+    // Try direct parse first
+    try { return JSON.parse(raw); } catch {}
+    // Extract first {...} block and try again
+    const match = raw.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error('No JSON object found in response');
+    return JSON.parse(match[0]);
+  }
+
+  // Helper: set D answer fields from a parsed item
+  function setAnswers(item) {
+    D.answer = item.answer;
+    D.answerKana = (typeof wanakana !== 'undefined')
+      ? wanakana.toHiragana(item.answerKana || item.answer)
+      : (item.answerKana || item.answer);
+    D.answerRomaji = (typeof wanakana !== 'undefined')
+      ? wanakana.toRomaji(wanakana.toHiragana(D.answerKana)).toLowerCase().replace(/[^a-z]/g,'')
+      : null;
     if (item.verbDictionary) D.usedVerbs.push(item.verbDictionary);
-    renderCard(item);
-  } catch(e) {
-    console.error('Fetch error:', e);
-    const fallbacks = [
-      { s:['公園で','。'], en:'I swam in the lake.', a:'およいで', v:'泳ぐ', f:'(およぐ)' },
-      { s:['ドアを','ください。'], en:'Please open the door.', a:'開けて', v:'開ける', f:'(あける)' },
-      { s:['毎日、日本語を','います。'], en:"I study Japanese every day.", a:'勉強して', v:'勉強する', f:'(べんきょうする)' },
-      { s:['友達に本を','。'], en:'I lent my friend a book.', a:'貸して', v:'貸す', f:'(かす)' },
-      { s:['もう','たくない。'], en:"I don't want to wait anymore.", a:'待ち', v:'待つ', f:'(まつ)' },
+  }
+
+  let success = false;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 512,
+          system: `You are a Japanese conjugation drill generator. Return a JSON object with these exact keys:
+sentenceParts: array of 2 strings (before and after the blank)
+englishSentence: full English translation
+nuanceHint: short parenthetical for passive/causative/conditional, else empty string
+answer: conjugated verb in kana/kanji
+answerKana: same verb in pure hiragana only, no kanji
+verbDictionary: dictionary form
+verbFurigana: hiragana reading in parentheses
+
+Do not include explanations or markdown. Just the JSON object.`,
+          messages: [{ role: 'user', content: userMsg }]
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        console.error('API error response:', data);
+        throw new Error(`API ${res.status}`);
+      }
+
+      const raw = data.content.map(b => b.text || '').join('');
+      console.log(`Attempt ${attempt + 1} raw:`, raw);
+      const item = parseJSON(raw);
+      setAnswers(item);
+      renderCard(item);
+      success = true;
+      break;
+
+    } catch(e) {
+      console.error(`Attempt ${attempt + 1} failed:`, e);
+      if (attempt < 1) {
+        await new Promise(r => setTimeout(r, 800)); // brief pause before retry
+      }
+    }
+  }
+
+  if (!success) {
+    // Only hit fallback after both attempts fail
+    const FALLBACKS = [
+      { s:['毎朝、コーヒーを','。'],      en:'I drink coffee every morning.',          a:'飲んで',     ak:'のんで',       v:'飲む',     f:'(のむ)'       },
+      { s:['ドアを','ください。'],         en:'Please open the door.',                  a:'開けて',     ak:'あけて',       v:'開ける',   f:'(あける)'     },
+      { s:['手紙を','います。'],            en:'I am writing a letter.',                 a:'書いて',     ak:'かいて',       v:'書く',     f:'(かく)'       },
+      { s:['今日は学校に','。'],           en:'I am not going to school today.',         a:'行かない',   ak:'いかない',     v:'行く',     f:'(いく)'       },
+      { s:['映画を','たい。'],             en:'I want to see a movie.',                  a:'見',         ak:'み',           v:'見る',     f:'(みる)'       },
+      { s:['友達と公園で','。'],           en:'I played at the park with my friend.',    a:'遊んで',     ak:'あそんで',     v:'遊ぶ',     f:'(あそぶ)'     },
+      { s:['宿題を','から寝る。'],         en:'I will sleep after finishing my homework.',a:'して',      ak:'して',         v:'する',     f:'(する)'       },
+      { s:['もう','たくない。'],           en:"I don't want to wait anymore.",           a:'待ち',       ak:'まちたくない', v:'待つ',     f:'(まつ)'       },
     ];
-    const fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    const fb = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
     D.answer      = fb.a;
-    D.answerKana  = fb.a;
-    D.answerRomaji = typeof wanakana !== 'undefined' ? wanakana.toRomaji(fb.a).toLowerCase() : '';
-    renderCard({ sentenceParts: fb.s, englishSentence: fb.en, nuanceHint:'', answer: fb.a, answerKana: fb.a, verbDictionary: fb.v, verbFurigana: fb.f });
+    D.answerKana  = fb.ak;
+    D.answerRomaji = (typeof wanakana !== 'undefined')
+      ? wanakana.toRomaji(fb.ak).toLowerCase().replace(/[^a-z]/g,'')
+      : null;
+    renderCard({ sentenceParts: fb.s, englishSentence: fb.en, nuanceHint:'', answer: fb.a, answerKana: fb.ak, verbDictionary: fb.v, verbFurigana: fb.f });
   }
 
   lc.classList.remove('visible');
@@ -924,17 +964,19 @@ function checkAnswer() {
 
   const ci = D.index;
 
-  // Normalize input: convert to hiragana if romaji, then to romaji for final comparison
-  let inputRomaji = rawAns.toLowerCase().replace(/\s/g,'');
+  // Normalize input to romaji for comparison
+  let normalizedInput = rawAns.toLowerCase().replace(/[^a-z\u3040-\u309f\u30a0-\u30ff]/g,'');
   if (typeof wanakana !== 'undefined') {
-    const asHira = wanakana.toHiragana(rawAns);
-    inputRomaji  = wanakana.toRomaji(asHira).toLowerCase().replace(/\s/g,'');
+    const hira = wanakana.toHiragana(normalizedInput);
+    normalizedInput = wanakana.toRomaji(hira).toLowerCase().replace(/[^a-z]/g,'');
   }
 
-  // Accept if romaji matches, or direct kana/kanji match
-  const correct = (D.answerRomaji && inputRomaji === D.answerRomaji)
-               || rawAns === D.answer
-               || rawAns === D.answerKana;
+  console.log({ userInput: rawAns, normalizedInput, expectedKana: D.answerKana, expectedRomaji: D.answerRomaji });
+
+  const correct =
+    (D.answerRomaji && normalizedInput === D.answerRomaji) ||
+    rawAns === D.answer ||
+    rawAns === D.answerKana;
 
   if (correct) {
     inp.classList.add('correct');
