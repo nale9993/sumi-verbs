@@ -667,6 +667,7 @@ const D = {
   results:   [],
   queue:     [],
   p2Scores:  {},
+  questionQueue: [],  // pre-generated questions for this session
 };
 
 // ════════════════════════════════════════════
@@ -675,7 +676,7 @@ const D = {
 function startPhase1(formId) {
   const form = FORMS.find(f => f.id === formId);
   D.type = 'phase1'; D.formId = formId; D.form = form;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = 10; D.usedVerbs = []; D.results = [];
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = 10; D.usedVerbs = []; D.results = []; D.questionQueue = [];
   D.queue = []; D.p2Scores = {};
 
   // Resume partial session
@@ -697,7 +698,7 @@ function startFinal(formId) {
   const form  = FORMS.find(f => f.id === formId);
   const total = Math.max(20, form.groups.length * 4);
   D.type = 'final'; D.formId = formId; D.form = form;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = total; D.usedVerbs = []; D.results = [];
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = total; D.usedVerbs = []; D.results = []; D.questionQueue = [];
   D.queue = []; D.p2Scores = {};
 
   document.getElementById('drillLabel').textContent = form.name;
@@ -711,7 +712,7 @@ function startPhase2() {
   if (!config) return;
 
   D.type = 'phase2'; D.formId = null; D.form = null;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length; D.usedVerbs = []; D.results = [];
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length; D.usedVerbs = []; D.results = []; D.questionQueue = [];
   D.queue = config.queue; D.p2Scores = {};
 
   // Init per-form score trackers
@@ -769,94 +770,71 @@ function pickVerb(groupId) {
 }
 
 // ════════════════════════════════════════════
-// FETCH SENTENCE
+// QUESTION GENERATION (batch at session start)
 // ════════════════════════════════════════════
-async function fetchSentence() {
-  const lc = document.getElementById('loadingCard');
-  const sc = document.getElementById('sentenceCard');
-  const ia = document.getElementById('inputArea');
+const CONJ_RULES = {
+  'te-ru':  'て-form of a る-verb: drop る, add て. E.g. 食べる→食べて',
+  'te-ku':  'て-form of a く-ending う-verb: く→いて. Exception: 行く→行って',
+  'te-gu':  'て-form of a ぐ-ending う-verb: ぐ→いで. E.g. 泳ぐ→泳いで',
+  'te-su':  'て-form of a す-ending う-verb: す→して. E.g. 話す→話して',
+  'te-tsu': 'て-form of a つ/う/る(godan) う-verb: →って. E.g. 待つ→待って, 買う→買って, 帰る→帰って',
+  'te-mu':  'て-form of a ぬ/ぶ/む う-verb: →んで. E.g. 飲む→飲んで, 遊ぶ→遊んで',
+  'te-irr': 'て-form of する or くる: する→して, くる→きて',
+  'nai-ru': 'ない-form of a る-verb: drop る, add ない. E.g. 食べる→食べない',
+  'nai-u':  'ない-form of a う-verb: shift to あ-row + ない. う-ending →わない. E.g. 書く→書かない, 買う→買わない',
+  'nai-irr':'ない-form of する or くる: する→しない, くる→こない',
+  'tai-all':'たい form (want to ~): ます-stem + たい. E.g. 食べる→食べたい, 飲む→飲みたい',
+  'tai-neg':'たくない form (don\'t want to ~): ます-stem + たくない. E.g. 食べる→食べたくない',
+};
 
-  lc.classList.add('visible');
-  sc.style.display = 'none';
-  ia.style.display = 'none';
-
-  // Maps group id → exact conjugation rule for the AI
-  const CONJ_RULES = {
-    'te-ru':  'て-form of a る-verb: drop る, add て. E.g. 食べる→食べて',
-    'te-ku':  'て-form of a く-ending う-verb: く→いて. Exception: 行く→行って',
-    'te-gu':  'て-form of a ぐ-ending う-verb: ぐ→いで. E.g. 泳ぐ→泳いで',
-    'te-su':  'て-form of a す-ending う-verb: す→して. E.g. 話す→話して',
-    'te-tsu': 'て-form of a つ/う/る(godan) う-verb: →って. E.g. 待つ→待って, 買う→買って, 帰る→帰って',
-    'te-mu':  'て-form of a ぬ/ぶ/む う-verb: →んで. E.g. 飲む→飲んで, 遊ぶ→遊んで',
-    'te-irr': 'て-form of する or くる: する→して, くる→きて',
-    'nai-ru': 'ない-form of a る-verb: drop る, add ない. E.g. 食べる→食べない',
-    'nai-u':  'ない-form of a う-verb: shift to あ-row + ない. う-ending exception: →わない. E.g. 書く→書かない, 買う→買わない',
-    'nai-irr':'ない-form of する or くる: する→しない, くる→こない',
-    'tai-all':'たい form (I want to ~): ます-stem + たい. E.g. 食べる→食べたい, 飲む→飲みたい',
-    'tai-neg':'たくない form (I don\'t want to ~): ます-stem + たくない. E.g. 食べる→食べたくない',
-  };
-
-  let form;
-  if (D.type === 'phase2') {
-    form = D.queue[D.index].form;
-  } else {
-    form = D.form;
-  }
-
-  // Show form name in sub-label for phase2
-  if (D.type === 'phase2') {
-    document.getElementById('drillSub').textContent = form.name;
-  }
-
-  // Determine which group to target this question
+function buildQuestionSpecs(form, count) {
+  // Build list of {groupId, verb, rule} specs for all questions in the session
   const st = getState(form.id);
-  const allGroups = st ? form.groups.filter(g => st.unlockedGroupIds.includes(g.id)) : [form.groups[0]];
-  let targetGroup;
-  if (D.type === 'phase2') {
-    const qi = D.queue[D.index];
-    const qst = getState(qi.form.id);
-    const qGroups = qst ? qi.form.groups.filter(g => qst.unlockedGroupIds.includes(g.id)) : [qi.form.groups[0]];
-    targetGroup = (qGroups.length > 1 && Math.random() < 0.5)
-      ? qGroups[qGroups.length - 1]
-      : qGroups[Math.floor(Math.random() * qGroups.length)];
-  } else {
-    if (allGroups.length > 1 && Math.random() < 0.5) {
-      targetGroup = allGroups[allGroups.length - 1];
+  const groups = st ? form.groups.filter(g => st.unlockedGroupIds.includes(g.id)) : [form.groups[0]];
+  const specs = [];
+  const usedVerbs = new Set();
+
+  for (let i = 0; i < count; i++) {
+    // 50% weight to newest group
+    let group;
+    if (groups.length > 1 && Math.random() < 0.5) {
+      group = groups[groups.length - 1];
     } else {
-      targetGroup = allGroups[Math.floor(Math.random() * allGroups.length)];
+      group = groups[Math.floor(Math.random() * groups.length)];
     }
+    const pool   = VERB_POOLS[group.id] || VERB_POOLS['te-ru'];
+    const unused = pool.filter(v => !usedVerbs.has(v));
+    const verb   = (unused.length ? unused : pool)[Math.floor(Math.random() * (unused.length || pool.length))];
+    usedVerbs.add(verb);
+    specs.push({ groupId: group.id, verb, rule: CONJ_RULES[group.id] });
   }
-  // Final safety net
-  if (!targetGroup) targetGroup = form.groups[0];
+  return specs;
+}
 
-  const chosenVerb = pickVerb(targetGroup?.id || 'te-ru');
-  const conjRule   = CONJ_RULES[targetGroup?.id] || targetGroup?.name || '';
+async function generateQuestions(form, count) {
+  const specs = buildQuestionSpecs(form, count);
 
-  const usedNote = D.usedVerbs.length
-    ? `\nVerbs already used this session (do NOT reuse): ${D.usedVerbs.join(', ')}.`
-    : '';
+  const specList = specs.map((s, i) =>
+    `${i+1}. Verb: ${s.verb} | Rule: ${s.rule}`
+  ).join('\n');
 
-  const userMsg = `Conjugation rule to apply: ${conjRule}
-Verb to conjugate: ${chosenVerb}
-The blank in the sentence must contain ${chosenVerb} conjugated exactly as described above — no other form is acceptable.${usedNote}
-Write a fresh, varied sentence that feels natural. Avoid generic sentences like "I want to eat sushi" or "let's go to the park".`;
+  const prompt = `Generate ${count} Japanese conjugation drill sentences. Each uses a different verb and scene.
 
-  // Helper: parse JSON tolerantly from a raw string
-  function parseJSON(raw) {
-    try { return JSON.parse(raw); } catch {}
-    const match = raw.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error('No JSON object found in response');
-    return JSON.parse(match[0]);
-  }
+For each drill:
+${specList}
 
-  function setAnswers(item) {
-    D.answer       = item.answer;
-    D.answerKana   = item.answerKana  || item.answer;
-    D.answerRomaji = (item.answerRomaji || '').toLowerCase().replace(/[^a-z]/g, '');
-    if (item.verbDictionary) D.usedVerbs.push(item.verbDictionary);
-  }
+Return a JSON array of ${count} objects. Each object must have:
+- sentenceParts: [text before blank, text after blank]
+- englishSentence: natural English translation
+- nuanceHint: "" (empty unless passive/causative/conditional)
+- answer: conjugated verb in kana/kanji
+- answerKana: conjugated verb in pure hiragana
+- answerRomaji: conjugated verb in hepburn romaji, lowercase, no spaces
+- verbDictionary: dictionary form
+- verbFurigana: (hiragana reading)
 
-  let success = false;
+Use varied, realistic scenes — daily life, work, school, weather, food, travel, emotions. No two sentences should have the same setting or structure.`;
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -864,63 +842,84 @@ Write a fresh, varied sentence that feels natural. Avoid generic sentences like 
         headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
-          max_tokens: 512,
-          system: `You are a Japanese conjugation drill generator for JLPT N5-N4 learners.
-
-The user will give you a specific verb and a specific conjugation rule. You MUST conjugate that exact verb using that exact rule — never use a different conjugation form.
-
-Return only a JSON object with these keys (no markdown, no extra text):
-- sentenceParts: [string before blank, string after blank] — the blank is where the conjugated verb goes
-- englishSentence: natural English translation of the full sentence
-- nuanceHint: short parenthetical only for passive/causative/conditional forms, else ""
-- answer: the conjugated verb in natural kana/kanji
-- answerKana: the conjugated verb in pure hiragana, no kanji
-- answerRomaji: the conjugated verb in hepburn romaji, lowercase, no spaces
-- verbDictionary: the dictionary/plain form of the verb
-- verbFurigana: hiragana reading of the dictionary form in parentheses`,
-          messages: [{ role: 'user', content: userMsg }]
+          max_tokens: 4096,
+          system: `You are a Japanese conjugation drill generator. The user gives you a numbered list of verbs and conjugation rules. You MUST conjugate each verb using exactly its specified rule — never substitute a different form. Return only a valid JSON array, no markdown.`,
+          messages: [{ role: 'user', content: prompt }]
         })
       });
 
       const data = await res.json();
-      if (!res.ok) {
-        console.error('API error response:', data);
-        throw new Error(`API ${res.status}`);
-      }
+      if (!res.ok) { console.error('API error:', data); throw new Error(`API ${res.status}`); }
 
       const raw = data.content.map(b => b.text || '').join('');
-      console.log(`Attempt ${attempt + 1} raw:`, raw);
-      const item = parseJSON(raw);
-      setAnswers(item);
-      renderCard(item);
-      success = true;
-      break;
+      console.log('Batch raw:', raw);
+
+      // Parse: try direct, then extract array
+      let items;
+      try { items = JSON.parse(raw); } catch {
+        const m = raw.match(/\[[\s\S]*\]/);
+        if (!m) throw new Error('No JSON array found');
+        items = JSON.parse(m[0]);
+      }
+
+      if (!Array.isArray(items) || items.length === 0) throw new Error('Empty array');
+      return items;
 
     } catch(e) {
-      console.error(`Attempt ${attempt + 1} failed:`, e);
-      if (attempt < 1) {
-        await new Promise(r => setTimeout(r, 800)); // brief pause before retry
-      }
+      console.error(`Batch attempt ${attempt+1} failed:`, e);
+      if (attempt < 1) await new Promise(r => setTimeout(r, 1000));
     }
   }
+  return null; // both attempts failed
+}
 
-  if (!success) {
-    const FALLBACKS = [
-      { s:['毎朝、コーヒーを','。'],    en:'I drink coffee every morning.',        a:'飲んで',   ak:'のんで',   ar:'nonde',   v:'飲む',   f:'(のむ)'   },
-      { s:['ドアを','ください。'],       en:'Please open the door.',               a:'開けて',   ak:'あけて',   ar:'akete',   v:'開ける', f:'(あける)' },
-      { s:['手紙を','います。'],         en:'I am writing a letter.',              a:'書いて',   ak:'かいて',   ar:'kaite',   v:'書く',   f:'(かく)'   },
-      { s:['今日は学校に','。'],         en:'I am not going to school today.',     a:'行かない', ak:'いかない', ar:'ikanai',  v:'行く',   f:'(いく)'   },
-      { s:['友達と公園で','。'],         en:'I played at the park with a friend.', a:'遊んで',   ak:'あそんで', ar:'asonde',  v:'遊ぶ',   f:'(あそぶ)' },
-      { s:['宿題を','から寝る。'],       en:'I will sleep after doing my homework.',a:'して',    ak:'して',     ar:'shite',   v:'する',   f:'(する)'   },
-    ];
-    const fb = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
-    D.answer      = fb.a;
-    D.answerKana  = fb.ak;
-    D.answerRomaji = fb.ar;
-    renderCard({ sentenceParts: fb.s, englishSentence: fb.en, nuanceHint:'', answer: fb.a, answerKana: fb.ak, answerRomaji: fb.ar, verbDictionary: fb.v, verbFurigana: fb.f });
+// ════════════════════════════════════════════
+// FETCH SENTENCE (now just serves from pre-generated queue)
+// ════════════════════════════════════════════
+async function fetchSentence() {
+  const lc = document.getElementById('loadingCard');
+  const sc = document.getElementById('sentenceCard');
+  const ia = document.getElementById('inputArea');
+
+  // If queue is empty, show loading and generate batch
+  if (D.questionQueue.length === 0) {
+    lc.classList.add('visible');
+    sc.style.display = 'none';
+    ia.style.display = 'none';
+
+    let form = D.type === 'phase2' ? D.queue[D.index]?.form : D.form;
+    const remaining = D.total - D.index;
+    const items = await generateQuestions(form, remaining);
+
+    if (items) {
+      D.questionQueue = items;
+    } else {
+      // Fallback pool if generation completely failed
+      D.questionQueue = [
+        { sentenceParts:['毎朝、コーヒーを','。'],    englishSentence:'I drink coffee every morning.',        nuanceHint:'', answer:'飲んで',   answerKana:'のんで',   answerRomaji:'nonde',   verbDictionary:'飲む',   verbFurigana:'(のむ)'   },
+        { sentenceParts:['ドアを','ください。'],       englishSentence:'Please open the door.',               nuanceHint:'', answer:'開けて',   answerKana:'あけて',   answerRomaji:'akete',   verbDictionary:'開ける', verbFurigana:'(あける)' },
+        { sentenceParts:['手紙を','います。'],         englishSentence:'I am writing a letter.',              nuanceHint:'', answer:'書いて',   answerKana:'かいて',   answerRomaji:'kaite',   verbDictionary:'書く',   verbFurigana:'(かく)'   },
+        { sentenceParts:['今日は学校に','。'],         englishSentence:'I am not going to school today.',     nuanceHint:'', answer:'行かない', answerKana:'いかない', answerRomaji:'ikanai',  verbDictionary:'行く',   verbFurigana:'(いく)'   },
+        { sentenceParts:['友達と公園で','。'],         englishSentence:'I played at the park with a friend.', nuanceHint:'', answer:'遊んで',   answerKana:'あそんで', answerRomaji:'asonde',  verbDictionary:'遊ぶ',   verbFurigana:'(あそぶ)' },
+        { sentenceParts:['宿題を','から寝る。'],       englishSentence:'I will sleep after doing my homework.',nuanceHint:'', answer:'して',    answerKana:'して',     answerRomaji:'shite',   verbDictionary:'する',   verbFurigana:'(する)'   },
+        { sentenceParts:['今日は魚を','たくない。'],   englishSentence:"I don't want to eat fish today.",     nuanceHint:'', answer:'食べ',    answerKana:'たべたくない', answerRomaji:'tabetakunai', verbDictionary:'食べる', verbFurigana:'(たべる)' },
+        { sentenceParts:['バスを','います。'],         englishSentence:'I am waiting for the bus.',           nuanceHint:'', answer:'待って',   answerKana:'まって',   answerRomaji:'matte',   verbDictionary:'待つ',   verbFurigana:'(まつ)'   },
+        { sentenceParts:['音楽を','ながら走る。'],     englishSentence:'I run while listening to music.',     nuanceHint:'', answer:'聞いて',   answerKana:'きいて',   answerRomaji:'kiite',   verbDictionary:'聞く',   verbFurigana:'(きく)'   },
+        { sentenceParts:['その映画は','たい。'],       englishSentence:'I want to see that movie.',           nuanceHint:'', answer:'見',       answerKana:'みたい',   answerRomaji:'mitai',   verbDictionary:'見る',   verbFurigana:'(みる)'   },
+      ];
+    }
+
+    lc.classList.remove('visible');
   }
 
-  lc.classList.remove('visible');
+  // Serve next question from queue
+  const item = D.questionQueue.shift();
+
+  D.answer       = item.answer;
+  D.answerKana   = item.answerKana  || item.answer;
+  D.answerRomaji = (item.answerRomaji || '').toLowerCase().replace(/[^a-z]/g, '');
+
+  renderCard(item);
   sc.style.display = 'flex';
   ia.style.display = 'flex';
 
@@ -930,7 +929,7 @@ Return only a JSON object with these keys (no markdown, no extra text):
   document.getElementById('nextBtn').className  = 'next-btn';
   document.getElementById('submitBtn').disabled = false;
   D.answered = false;
-  inp.onkeydown = e => { if(e.key==='Enter') checkAnswer(); };
+  inp.onkeydown = e => { if (e.key === 'Enter') checkAnswer(); };
 }
 
 function renderCard(item) {
