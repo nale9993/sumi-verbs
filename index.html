@@ -303,7 +303,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
   <div class="input-area" id="inputArea" style="display:none">
     <div class="input-row">
       <input class="answer-input" id="answerInput" type="text" placeholder="答えを入力…" autocomplete="off" autocorrect="off" spellcheck="false"/>
-      <button class="submit-btn" onclick="checkAnswer()">Check</button>
+      <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">Check</button>
     </div>
     <div class="feedback" id="feedback"></div>
     <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
@@ -652,19 +652,20 @@ function buildPhase2Queue() {
 // DRILL STATE
 // ════════════════════════════════════════════
 const D = {
-  type:    null,   // 'phase1' | 'final' | 'phase2'
-  formId:  null,
-  form:    null,
-  answer:  null,
-  answerKana: null,
-  answered: false,
-  correct: 0,
-  wrong:   0,
-  index:   0,
-  total:   10,
-  results: [],     // 'correct'|'wrong' per answered question
-  queue:   [],     // phase2 only
-  p2Scores: {},    // phase2 only: { formId: { correct, total } }
+  type:      null,
+  formId:    null,
+  form:      null,
+  answer:    null,
+  answerKana:null,
+  answered:  false,
+  correct:   0,
+  wrong:     0,
+  index:     0,
+  total:     10,
+  usedVerbs: [],
+  results:   [],
+  queue:     [],
+  p2Scores:  {},
 };
 
 // ════════════════════════════════════════════
@@ -742,6 +743,31 @@ function initDrillView(total, startIndex) {
 }
 
 // ════════════════════════════════════════════
+// VERB POOLS (per group, for client-side verb selection)
+// ════════════════════════════════════════════
+const VERB_POOLS = {
+  'te-ru':  ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','閉める','借りる','疲れる','続ける','始める','答える'],
+  'te-ku':  ['書く','聞く','歩く','働く','行く','置く','焼く','引く'],
+  'te-gu':  ['泳ぐ','急ぐ','脱ぐ','稼ぐ'],
+  'te-su':  ['話す','貸す','探す','返す','出す','直す','消す'],
+  'te-tsu': ['待つ','持つ','買う','使う','歌う','笑う','会う','思う','払う','帰る','取る','乗る','作る','走る','泊まる'],
+  'te-mu':  ['飲む','読む','住む','休む','遊ぶ','呼ぶ','運ぶ','飛ぶ','頼む','選ぶ','楽しむ'],
+  'te-irr': ['する','くる','勉強する','運動する','料理する','電話する','掃除する','練習する'],
+  'nai-ru': ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','借りる','疲れる','始める'],
+  'nai-u':  ['書く','話す','待つ','買う','飲む','読む','遊ぶ','帰る','取る','使う','思う','走る','急ぐ'],
+  'nai-irr':['する','くる','勉強する','運動する','料理する','掃除する','練習する'],
+  'tai-all':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','旅行する'],
+  'tai-neg':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','働く'],
+};
+
+function pickVerb(groupId) {
+  const pool = VERB_POOLS[groupId] || VERB_POOLS['te-ru'];
+  const unused = pool.filter(v => !D.usedVerbs.includes(v));
+  const src = unused.length ? unused : pool;
+  return src[Math.floor(Math.random() * src.length)];
+}
+
+// ════════════════════════════════════════════
 // FETCH SENTENCE
 // ════════════════════════════════════════════
 async function fetchSentence() {
@@ -781,52 +807,26 @@ async function fetchSentence() {
     document.getElementById('drillSub').textContent = form.name;
   }
 
-  // Client-side verb pools per group — pick one randomly to give the AI a concrete verb
-  const VERB_POOLS = {
-    'te-ru':  ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','閉める','借りる','疲れる','続ける','始める','答える'],
-    'te-ku':  ['書く','聞く','歩く','働く','行く','置く','焼く','引く'],
-    'te-gu':  ['泳ぐ','急ぐ','脱ぐ','稼ぐ'],
-    'te-su':  ['話す','貸す','探す','返す','出す','直す','消す'],
-    'te-tsu': ['待つ','持つ','買う','使う','歌う','笑う','会う','思う','払う','帰る','取る','乗る','作る','走る','泊まる'],
-    'te-mu':  ['飲む','読む','住む','休む','遊ぶ','呼ぶ','運ぶ','飛ぶ','頼む','選ぶ','楽しむ'],
-    'te-irr': ['する','くる','勉強する','運動する','料理する','電話する','掃除する','練習する'],
-    'nai-ru': ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','借りる','疲れる','始める'],
-    'nai-u':  ['書く','話す','待つ','買う','飲む','読む','遊ぶ','帰る','取る','使う','思う','走る','急ぐ'],
-    'nai-irr':['する','くる','勉強する','運動する','料理する','掃除する','練習する'],
-    'tai-all':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','旅行する'],
-    'tai-neg':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','働く'],
-  };
-
-  // Pick a random unused verb for the target group
-  function pickVerb(groupId) {
-    const pool = VERB_POOLS[groupId] || VERB_POOLS['te-ru'];
-    const unused = pool.filter(v => !D.usedVerbs.includes(v));
-    const src = unused.length ? unused : pool;
-    return src[Math.floor(Math.random() * src.length)];
-  }
-
   // Determine which group to target this question
   const st = getState(form.id);
-  const allGroups = form.groups.filter(g => st && st.unlockedGroupIds.includes(g.id));
+  const allGroups = st ? form.groups.filter(g => st.unlockedGroupIds.includes(g.id)) : [form.groups[0]];
   let targetGroup;
   if (D.type === 'phase2') {
     const qi = D.queue[D.index];
-    targetGroup = form.groups[form.groups.length - 1]; // use last unlocked as default
-    // find group from queue item's formId context
     const qst = getState(qi.form.id);
-    const qGroups = qi.form.groups.filter(g => qst && qst.unlockedGroupIds.includes(g.id));
-    // 50% newest, 50% random from all
+    const qGroups = qst ? qi.form.groups.filter(g => qst.unlockedGroupIds.includes(g.id)) : [qi.form.groups[0]];
     targetGroup = (qGroups.length > 1 && Math.random() < 0.5)
       ? qGroups[qGroups.length - 1]
       : qGroups[Math.floor(Math.random() * qGroups.length)];
   } else {
-    // 50% weight newest group
     if (allGroups.length > 1 && Math.random() < 0.5) {
       targetGroup = allGroups[allGroups.length - 1];
     } else {
       targetGroup = allGroups[Math.floor(Math.random() * allGroups.length)];
     }
   }
+  // Final safety net
+  if (!targetGroup) targetGroup = form.groups[0];
 
   const chosenVerb = pickVerb(targetGroup?.id || 'te-ru');
   const conjRule   = CONJ_RULES[targetGroup?.id] || targetGroup?.name || '';
