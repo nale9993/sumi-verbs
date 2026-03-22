@@ -6,6 +6,7 @@
 <title>墨 Sumi — 動詞</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+JP:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/wanakana/5.3.1/wanakana.min.js"></script>
 <style>
 :root {
   --bg:#171310; --bg2:#1f1a16; --bg3:#2a231d;
@@ -752,24 +753,41 @@ async function fetchSentence() {
 
   let form, groupContext, newestGroupName;
 
+  // Maps form+group to exact conjugation rule description for the AI
+  const CONJ_RULES = {
+    'te-ru':  'て-form of a る-verb: drop る, add て. E.g. 食べる→食べて',
+    'te-ku':  'て-form of a く-ending う-verb: く→いて. E.g. 書く→書いて. Exception: 行く→行って',
+    'te-gu':  'て-form of a ぐ-ending う-verb: ぐ→いで. E.g. 泳ぐ→泳いで',
+    'te-su':  'て-form of a す-ending う-verb: す→して. E.g. 話す→話して',
+    'te-tsu': 'て-form of a つ/う/る-ending う-verb: →って. E.g. 待つ→待って, 買う→買って, 帰る→帰って',
+    'te-mu':  'て-form of a ぬ/ぶ/む-ending う-verb: →んで. E.g. 飲む→飲んで, 遊ぶ→遊んで',
+    'te-irr': 'て-form of する or くる: する→して, くる→きて',
+    'nai-ru': 'ない-form of a る-verb: drop る, add ない. E.g. 食べる→食べない',
+    'nai-u':  'ない-form of a う-verb: shift to あ-row + ない. Exception: う-ending verbs use わない not あない. E.g. 書く→書かない, 買う→買わない',
+    'nai-irr':'ない-form of する or くる: する→しない, くる→こない',
+    'tai-all':'たい-form (want to): attach たい to the ます-stem. E.g. 食べる→食べたい, 飲む→飲みたい',
+    'tai-neg':'たくない-form (don\'t want to): ます-stem + たくない. E.g. 食べる→食べたくない, 行く→行きたくない',
+  };
+
   if (D.type === 'phase2') {
     const qi = D.queue[D.index];
     form = qi.form;
     const st = getState(form.id);
     const allGroups = form.groups.filter(g => st.unlockedGroupIds.includes(g.id));
-    groupContext = allGroups.map(g => g.name).join(', ');
-    newestGroupName = null; // all groups equal in phase2
+    groupContext = allGroups.map(g => CONJ_RULES[g.id] || g.name).join(' OR ');
   } else {
     form = D.form;
     const st = getState(form.id);
     const allGroups = form.groups.filter(g => st.unlockedGroupIds.includes(g.id));
-    newestGroupName = allGroups[allGroups.length - 1]?.name;
+    newestGroupName = allGroups[allGroups.length - 1]?.id;
     // 50% weight toward newest group
+    let targetGroups;
     if (allGroups.length > 1 && Math.random() < 0.5) {
-      groupContext = newestGroupName;
+      targetGroups = [allGroups[allGroups.length - 1]];
     } else {
-      groupContext = allGroups.map(g => g.name).join(', ');
+      targetGroups = allGroups;
     }
+    groupContext = targetGroups.map(g => CONJ_RULES[g.id] || g.name).join(' OR ');
   }
 
   // Show current form in drill sub for phase2
@@ -779,13 +797,7 @@ async function fetchSentence() {
 
   // Track used verbs to avoid repeats within a session
   if (!D.usedVerbs) D.usedVerbs = [];
-  const usedNote = D.usedVerbs.length ? `\nAvoid these verbs already used this session: ${D.usedVerbs.join(', ')}.` : '';
-
-  // Polarity variation for たい form
-  let polarityNote = '';
-  if (form.id === 'tai') {
-    polarityNote = Math.random() < 0.5 ? '\nUse the POSITIVE form (たい — want to ~).' : '\nUse the NEGATIVE form (たくない — don\'t want to ~).';
-  }
+  const usedNote = D.usedVerbs.length ? ` Avoid these verbs already used: ${D.usedVerbs.join(', ')}.` : '';
 
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -822,7 +834,7 @@ Draw from this diverse verb pool and vary widely — do NOT repeat the same verb
 う-verbs (る): 帰る(かえる), 取る(とる), 乗る(のる), 知る(しる), 作る(つくる), 売る(うる), 切る(きる), 送る(おくる), 降る(ふる), 走る(はしる), 太る(ふとる), 泊まる(とまる), 始まる(はじまる), 終わる(おわる)
 う-verbs (ぬ・ぶ・む): 飲む(のむ), 読む(よむ), 住む(すむ), 休む(やすむ), 遊ぶ(あそぶ), 呼ぶ(よぶ), 運ぶ(はこぶ), 飛ぶ(とぶ), 死ぬ(しぬ), 頼む(たのむ), 選ぶ(えらぶ), 楽しむ(たのしむ), 込む(こむ)
 Irregular: する, くる, 勉強する(べんきょうする), 運動する(うんどうする), 料理する(りょうりする), 電話する(でんわする), 結婚する(けっこんする), 掃除する(そうじする), 練習する(れんしゅうする), 旅行する(りょこうする)`,
-        messages:[{role:'user', content:`Conjugation form to drill: ${form.name}. The answer MUST be in ${form.name} — no other conjugation form is acceptable. Verb subgroup to draw from: ${groupContext}.${polarityNote}${usedNote} Generate one sentence drill.`}]
+        messages:[{role:'user', content:`Conjugation rule: ${groupContext}.${usedNote} Generate one sentence drill where the blank uses exactly this conjugation.`}]
       })
     });
     const data  = await res.json();
@@ -864,10 +876,10 @@ function checkAnswer() {
   const inp   = document.getElementById('answerInput');
   const fb    = document.getElementById('feedback');
   const nb    = document.getElementById('nextBtn');
-  const ans   = inp.value.trim();
-  if (!ans) return;
-
-  const ci      = D.index; // current question index before increment
+  const rawAns  = inp.value.trim();
+  if (!rawAns) return;
+  const ans     = (typeof wanakana !== 'undefined') ? wanakana.toHiragana(rawAns, { IMEMode: false }) : rawAns;
+  const ci      = D.index;
   const correct = ans === D.answer;
 
   if (correct) {
@@ -934,9 +946,9 @@ function showDrillView() {
 }
 
 function exitDrill() {
-  // Save partial phase1/final session
   if (D.type === 'phase1' || D.type === 'final') {
-    SS('sv-ss', { type: D.type, formId: D.formId, correct: D.correct, wrong: D.wrong, index: D.index, results: D.results });
+    savedSess = { type: D.type, formId: D.formId, correct: D.correct, wrong: D.wrong, index: D.index, results: D.results };
+    SS('sv-ss', savedSess);
   }
   document.getElementById('mainTabBar').style.display = '';
   switchTab('practice');
