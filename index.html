@@ -657,6 +657,7 @@ const D = {
   form:      null,
   answer:    null,
   answerKana:null,
+  answerRomaji:null,
   answered:  false,
   correct:   0,
   wrong:     0,
@@ -858,18 +859,31 @@ The blank in sentenceParts replaces only the conjugated verb. The englishSentenc
       })
     });
     const data  = await res.json();
-    if (!res.ok) throw new Error(`API error ${res.status}: ${JSON.stringify(data)}`);
+    if (!res.ok) throw new Error(`API ${res.status}: ${JSON.stringify(data)}`);
     const raw   = data.content.map(b => b.text||'').join('');
-    const item  = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    console.log('API raw:', raw);
+    const clean = raw.replace(/^[\s\S]*?(\{)/,'$1').replace(/\}[\s\S]*$/,'}'); // extract first JSON object
+    const item  = JSON.parse(clean);
     D.answer     = item.answer;
     D.answerKana = item.answerKana || item.answer;
+    // Pre-compute romaji of answer for comparison
+    D.answerRomaji = typeof wanakana !== 'undefined' ? wanakana.toRomaji(D.answerKana).toLowerCase().replace(/\s/g,'') : '';
     if (item.verbDictionary) D.usedVerbs.push(item.verbDictionary);
     renderCard(item);
   } catch(e) {
     console.error('Fetch error:', e);
-    D.answer     = 'たべて';
-    D.answerKana = 'たべて';
-    renderCard({ sentenceParts:['ちょっと待って、ご飯を','から行こう。'], englishSentence:'Wait a moment, let\'s go after eating.', nuanceHint:'', answer:'たべて', answerKana:'たべて', verbDictionary:'食べる', verbFurigana:'(たべる)' });
+    const fallbacks = [
+      { s:['公園で','。'], en:'I swam in the lake.', a:'およいで', v:'泳ぐ', f:'(およぐ)' },
+      { s:['ドアを','ください。'], en:'Please open the door.', a:'開けて', v:'開ける', f:'(あける)' },
+      { s:['毎日、日本語を','います。'], en:"I study Japanese every day.", a:'勉強して', v:'勉強する', f:'(べんきょうする)' },
+      { s:['友達に本を','。'], en:'I lent my friend a book.', a:'貸して', v:'貸す', f:'(かす)' },
+      { s:['もう','たくない。'], en:"I don't want to wait anymore.", a:'待ち', v:'待つ', f:'(まつ)' },
+    ];
+    const fb = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+    D.answer      = fb.a;
+    D.answerKana  = fb.a;
+    D.answerRomaji = typeof wanakana !== 'undefined' ? wanakana.toRomaji(fb.a).toLowerCase() : '';
+    renderCard({ sentenceParts: fb.s, englishSentence: fb.en, nuanceHint:'', answer: fb.a, answerKana: fb.a, verbDictionary: fb.v, verbFurigana: fb.f });
   }
 
   lc.classList.remove('visible');
@@ -908,21 +922,19 @@ function checkAnswer() {
   D.answered = true;
   document.getElementById('submitBtn').disabled = true;
 
-  // Normalize: convert romaji → hiragana, strip any remaining kanji via wanakana
-  const toKana = (s) => {
-    if (typeof wanakana === 'undefined') return s;
-    // If fully romaji, convert; otherwise leave kana as-is
-    return wanakana.isRomaji(s) ? wanakana.toHiragana(s) : wanakana.toHiragana(s);
-  };
+  const ci = D.index;
 
-  const inputKana = toKana(rawAns);
-  // answerKana comes from API (pure hiragana). As safety net, also convert it.
-  const targetKana = typeof wanakana !== 'undefined'
-    ? wanakana.toHiragana(D.answerKana || D.answer)
-    : (D.answerKana || D.answer);
+  // Normalize input: convert to hiragana if romaji, then to romaji for final comparison
+  let inputRomaji = rawAns.toLowerCase().replace(/\s/g,'');
+  if (typeof wanakana !== 'undefined') {
+    const asHira = wanakana.toHiragana(rawAns);
+    inputRomaji  = wanakana.toRomaji(asHira).toLowerCase().replace(/\s/g,'');
+  }
 
-  const ci      = D.index;
-  const correct = inputKana === targetKana || rawAns === D.answer;
+  // Accept if romaji matches, or direct kana/kanji match
+  const correct = (D.answerRomaji && inputRomaji === D.answerRomaji)
+               || rawAns === D.answer
+               || rawAns === D.answerKana;
 
   if (correct) {
     inp.classList.add('correct');
