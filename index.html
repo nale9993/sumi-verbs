@@ -832,31 +832,27 @@ async function fetchSentence() {
   const chosenVerb = pickVerb(targetGroup?.id || 'te-ru');
   const conjRule   = CONJ_RULES[targetGroup?.id] || targetGroup?.name || '';
 
-  const userMsg = `Conjugation rule: ${conjRule}
-Use this specific verb: ${chosenVerb}
-Generate one sentence drill where the blank contains this verb conjugated using the rule above. Use natural N5-N4 Japanese for the rest of the sentence.`;
+  const usedNote = D.usedVerbs.length
+    ? `\nVerbs already used this session (do NOT reuse): ${D.usedVerbs.join(', ')}.`
+    : '';
 
-  const usedNote = '';
+  const userMsg = `Conjugation rule to apply: ${conjRule}
+Verb to conjugate: ${chosenVerb}
+The blank in the sentence must contain ${chosenVerb} conjugated exactly as described above — no other form is acceptable.${usedNote}
+Write a fresh, varied sentence that feels natural. Avoid generic sentences like "I want to eat sushi" or "let's go to the park".`;
 
   // Helper: parse JSON tolerantly from a raw string
   function parseJSON(raw) {
-    // Try direct parse first
     try { return JSON.parse(raw); } catch {}
-    // Extract first {...} block and try again
     const match = raw.match(/\{[\s\S]*\}/);
     if (!match) throw new Error('No JSON object found in response');
     return JSON.parse(match[0]);
   }
 
-  // Helper: set D answer fields from a parsed item
   function setAnswers(item) {
-    D.answer = item.answer;
-    D.answerKana = (typeof wanakana !== 'undefined')
-      ? wanakana.toHiragana(item.answerKana || item.answer)
-      : (item.answerKana || item.answer);
-    D.answerRomaji = (typeof wanakana !== 'undefined')
-      ? wanakana.toRomaji(wanakana.toHiragana(D.answerKana)).toLowerCase().replace(/[^a-z]/g,'')
-      : null;
+    D.answer       = item.answer;
+    D.answerKana   = item.answerKana  || item.answer;
+    D.answerRomaji = (item.answerRomaji || '').toLowerCase().replace(/[^a-z]/g, '');
     if (item.verbDictionary) D.usedVerbs.push(item.verbDictionary);
   }
 
@@ -869,16 +865,19 @@ Generate one sentence drill where the blank contains this verb conjugated using 
         body: JSON.stringify({
           model: 'claude-sonnet-4-20250514',
           max_tokens: 512,
-          system: `You are a Japanese conjugation drill generator. Return a JSON object with these exact keys:
-sentenceParts: array of 2 strings (before and after the blank)
-englishSentence: full English translation
-nuanceHint: short parenthetical for passive/causative/conditional, else empty string
-answer: conjugated verb in kana/kanji
-answerKana: same verb in pure hiragana only, no kanji
-verbDictionary: dictionary form
-verbFurigana: hiragana reading in parentheses
+          system: `You are a Japanese conjugation drill generator for JLPT N5-N4 learners.
 
-Do not include explanations or markdown. Just the JSON object.`,
+The user will give you a specific verb and a specific conjugation rule. You MUST conjugate that exact verb using that exact rule — never use a different conjugation form.
+
+Return only a JSON object with these keys (no markdown, no extra text):
+- sentenceParts: [string before blank, string after blank] — the blank is where the conjugated verb goes
+- englishSentence: natural English translation of the full sentence
+- nuanceHint: short parenthetical only for passive/causative/conditional forms, else ""
+- answer: the conjugated verb in natural kana/kanji
+- answerKana: the conjugated verb in pure hiragana, no kanji
+- answerRomaji: the conjugated verb in hepburn romaji, lowercase, no spaces
+- verbDictionary: the dictionary/plain form of the verb
+- verbFurigana: hiragana reading of the dictionary form in parentheses`,
           messages: [{ role: 'user', content: userMsg }]
         })
       });
@@ -906,24 +905,19 @@ Do not include explanations or markdown. Just the JSON object.`,
   }
 
   if (!success) {
-    // Only hit fallback after both attempts fail
     const FALLBACKS = [
-      { s:['毎朝、コーヒーを','。'],      en:'I drink coffee every morning.',          a:'飲んで',     ak:'のんで',       v:'飲む',     f:'(のむ)'       },
-      { s:['ドアを','ください。'],         en:'Please open the door.',                  a:'開けて',     ak:'あけて',       v:'開ける',   f:'(あける)'     },
-      { s:['手紙を','います。'],            en:'I am writing a letter.',                 a:'書いて',     ak:'かいて',       v:'書く',     f:'(かく)'       },
-      { s:['今日は学校に','。'],           en:'I am not going to school today.',         a:'行かない',   ak:'いかない',     v:'行く',     f:'(いく)'       },
-      { s:['映画を','たい。'],             en:'I want to see a movie.',                  a:'見',         ak:'み',           v:'見る',     f:'(みる)'       },
-      { s:['友達と公園で','。'],           en:'I played at the park with my friend.',    a:'遊んで',     ak:'あそんで',     v:'遊ぶ',     f:'(あそぶ)'     },
-      { s:['宿題を','から寝る。'],         en:'I will sleep after finishing my homework.',a:'して',      ak:'して',         v:'する',     f:'(する)'       },
-      { s:['もう','たくない。'],           en:"I don't want to wait anymore.",           a:'待ち',       ak:'まちたくない', v:'待つ',     f:'(まつ)'       },
+      { s:['毎朝、コーヒーを','。'],    en:'I drink coffee every morning.',        a:'飲んで',   ak:'のんで',   ar:'nonde',   v:'飲む',   f:'(のむ)'   },
+      { s:['ドアを','ください。'],       en:'Please open the door.',               a:'開けて',   ak:'あけて',   ar:'akete',   v:'開ける', f:'(あける)' },
+      { s:['手紙を','います。'],         en:'I am writing a letter.',              a:'書いて',   ak:'かいて',   ar:'kaite',   v:'書く',   f:'(かく)'   },
+      { s:['今日は学校に','。'],         en:'I am not going to school today.',     a:'行かない', ak:'いかない', ar:'ikanai',  v:'行く',   f:'(いく)'   },
+      { s:['友達と公園で','。'],         en:'I played at the park with a friend.', a:'遊んで',   ak:'あそんで', ar:'asonde',  v:'遊ぶ',   f:'(あそぶ)' },
+      { s:['宿題を','から寝る。'],       en:'I will sleep after doing my homework.',a:'して',    ak:'して',     ar:'shite',   v:'する',   f:'(する)'   },
     ];
     const fb = FALLBACKS[Math.floor(Math.random() * FALLBACKS.length)];
     D.answer      = fb.a;
     D.answerKana  = fb.ak;
-    D.answerRomaji = (typeof wanakana !== 'undefined')
-      ? wanakana.toRomaji(fb.ak).toLowerCase().replace(/[^a-z]/g,'')
-      : null;
-    renderCard({ sentenceParts: fb.s, englishSentence: fb.en, nuanceHint:'', answer: fb.a, answerKana: fb.ak, verbDictionary: fb.v, verbFurigana: fb.f });
+    D.answerRomaji = fb.ar;
+    renderCard({ sentenceParts: fb.s, englishSentence: fb.en, nuanceHint:'', answer: fb.a, answerKana: fb.ak, answerRomaji: fb.ar, verbDictionary: fb.v, verbFurigana: fb.f });
   }
 
   lc.classList.remove('visible');
@@ -964,14 +958,10 @@ function checkAnswer() {
 
   const ci = D.index;
 
-  // Normalize input to romaji for comparison
-  let normalizedInput = rawAns.toLowerCase().replace(/[^a-z\u3040-\u309f\u30a0-\u30ff]/g,'');
-  if (typeof wanakana !== 'undefined') {
-    const hira = wanakana.toHiragana(normalizedInput);
-    normalizedInput = wanakana.toRomaji(hira).toLowerCase().replace(/[^a-z]/g,'');
-  }
+  // Normalize user input: lowercase, strip everything except letters and Japanese kana/kanji
+  const normalizedInput = rawAns.toLowerCase().replace(/[^a-z\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]/g, '');
 
-  console.log({ userInput: rawAns, normalizedInput, expectedKana: D.answerKana, expectedRomaji: D.answerRomaji });
+  console.log({ rawAns, normalizedInput, answerRomaji: D.answerRomaji, answerKana: D.answerKana, answer: D.answer });
 
   const correct =
     (D.answerRomaji && normalizedInput === D.answerRomaji) ||
