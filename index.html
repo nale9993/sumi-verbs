@@ -39,7 +39,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .view.active{display:flex;animation:fadeUp .2s ease}
 
 /* LEARN BANNER */
-.learn-banner{display:none;margin-top:28px;background:linear-gradient(135deg,rgba(201,138,58,.1),rgba(201,138,58,.04));border:1px solid var(--amber-dim);border-radius:8px;padding:18px 22px;gap:16px;align-items:center;animation:fadeUp .3s ease}
+.learn-banner{display:none;margin-top:24px;background:linear-gradient(135deg,rgba(201,138,58,.1),rgba(201,138,58,.04));border:1px solid var(--amber-dim);border-radius:8px;padding:18px 22px;gap:16px;align-items:center;animation:fadeUp .3s ease}
 .learn-banner.visible{display:flex}
 .learn-banner-icon{font-size:1.4rem;flex-shrink:0}
 .learn-banner-body{flex:1}
@@ -228,6 +228,12 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 
 <!-- ══ PRACTICE ══ -->
 <div class="view active" id="view-practice">
+
+  <div class="home-hero">
+    <h1>Conjugate<br>with <em>confidence.</em></h1>
+    <div class="home-rule"></div>
+  </div>
+
   <div class="learn-banner" id="learnBanner">
     <div class="learn-banner-icon">📖</div>
     <div class="learn-banner-body">
@@ -236,11 +242,6 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
       <div class="learn-banner-sub">Study this pattern before you drill it.</div>
     </div>
     <button class="learn-banner-btn" onclick="openModal()">Study Now</button>
-  </div>
-
-  <div class="home-hero">
-    <h1>Conjugate<br>with <em>confidence.</em></h1>
-    <div class="home-rule"></div>
   </div>
 
   <div id="learningSection">
@@ -356,6 +357,10 @@ const FORMS = [
       { id:'te-mu', name:'う-verbs: ぬ・ぶ・む → んで',
         body:`<p>Verbs ending in ぬ, ぶ, or む all change to んで. The nasal ん absorbs the consonant and voiced で follows. Covers common verbs like 飲む and 読む.</p>`,
         examples:[{from:'飲む',to:'飲んで',en:'to drink → (please) drink'},{from:'読む',to:'読んで',en:'to read → (please) read'},{from:'遊ぶ',to:'遊んで',en:'to play → playing'},{from:'死ぬ',to:'死んで',en:'to die → dying'}]},
+      { id:'te-irr', name:'Irregular verbs: する・くる',
+        body:`<p>する and くる are fully irregular and must be memorized. する → して, くる → きて. There are no patterns to apply — these two verbs are exceptions to everything.</p>
+              <p>する is also the base of countless compound verbs: 勉強する → 勉強して, 運動する → 運動して. Once you know して, all する-compounds follow automatically.</p>`,
+        examples:[{from:'する',to:'して',en:'to do → doing / please do'},{from:'くる',to:'きて',en:'to come → coming / please come'},{from:'勉強する',to:'勉強して',en:'to study → (please) study'},{from:'電話する',to:'電話して',en:'to call → please call me'}]},
     ]
   },
   {
@@ -363,18 +368,28 @@ const FORMS = [
     groups:[
       { id:'nai-ru', name:'る-verbs',
         body:`<p>Drop る, add ない. Exactly parallel to て-form for る-verbs — the stem stays the same, only the ending changes.</p>`,
-        examples:[{from:'食べる',to:'食べない',en:"don't eat"},{from:'見る',to:'見ない',en:"don't see"},{from:'起きる',to:'起きない',en:"don't wake up"}]},
+        examples:[{from:'食べる',to:'食べない',en:"don't eat"},{from:'見る',to:'見ない',en:"don't see"},{from:'起きる',to:'起きない',en:"don't wake up"},{from:'寝る',to:'寝ない',en:"don't sleep"}]},
       { id:'nai-u', name:'う-verbs + the わ exception',
-        body:`<p>Shift the final kana to the あ-row and add ない. Critical exception: verbs ending in う become わない (not あない). The わ is a historical form that appears here and only here.</p>`,
+        body:`<p>Shift the final kana to the あ-row and add ない: く→か、ぐ→が、す→さ、つ→た、ぬ→な、ぶ→ば、む→ま、る→ら.</p>
+              <p>Critical exception: verbs ending in う become わない, not あない. The hiragana わ is a historical form that surfaces here and only here — it must be memorized.</p>`,
         examples:[{from:'書く',to:'書かない',en:"don't write"},{from:'話す',to:'話さない',en:"don't speak"},{from:'待つ',to:'待たない',en:"don't wait"},{from:'買う',to:'買わない',en:"don't buy (わ exception!)"},{from:'飲む',to:'飲まない',en:"don't drink"}]},
+      { id:'nai-irr', name:'Irregular verbs: する・くる',
+        body:`<p>する and くる are fully irregular in ない-form too. する → しない, くる → こない. Note that くる shifts its vowel to こ — unlike any regular pattern.</p>
+              <p>As with て-form, all する-compounds follow the same pattern: 勉強する → 勉強しない, 運動する → 運動しない.</p>`,
+        examples:[{from:'する',to:'しない',en:"don't do"},{from:'くる',to:'こない',en:"don't come"},{from:'勉強する',to:'勉強しない',en:"don't study"},{from:'運動する',to:'運動しない',en:"don't exercise"}]},
     ]
   },
   {
-    id:'tai', name:'たい', jpEx:'食べたい・飲みたい',
+    id:'tai', name:'たい・たくない', jpEx:'食べたい・行きたくない',
     groups:[
-      { id:'tai-all', name:'All verb types',
-        body:`<p>たい expresses the speaker's own desire: "I want to ~." Attach to the ます-stem. たい conjugates like an い-adjective: 食べたくない (don't want to eat), 食べたかった (wanted to eat). For third-party desires, use たがっている.</p>`,
-        examples:[{from:'食べる',to:'食べたい',en:'want to eat'},{from:'飲む',to:'飲みたい',en:'want to drink'},{from:'行く',to:'行きたい',en:'want to go'},{from:'見る',to:'見たい',en:'want to see'}]},
+      { id:'tai-all', name:'Positive: たい (want to)',
+        body:`<p>たい expresses the speaker's own desire: "I want to ~." Attach to the ます-stem (い-row vowel shift for う-verbs, drop る for る-verbs).</p>
+              <p>たい conjugates like an い-adjective, which means the negative is たくない and the past is たかった. For third-party desires, use たがっている instead of たい.</p>`,
+        examples:[{from:'食べる',to:'食べたい',en:'want to eat'},{from:'飲む',to:'飲みたい',en:'want to drink'},{from:'行く',to:'行きたい',en:'want to go'},{from:'する',to:'したい',en:'want to do'}]},
+      { id:'tai-neg', name:'Negative: たくない (don\'t want to)',
+        body:`<p>The negative of たい is たくない — formed exactly like negating an い-adjective: drop い, add くない. This expresses "I don't want to ~."</p>
+              <p>Because it follows い-adjective rules, it also has a past negative: たくなかった (didn't want to). The stem never changes — only the ending shifts.</p>`,
+        examples:[{from:'食べる',to:'食べたくない',en:"don't want to eat"},{from:'行く',to:'行きたくない',en:"don't want to go"},{from:'起きる',to:'起きたくない',en:"don't want to wake up"},{from:'する',to:'したくない',en:"don't want to do it"}]},
     ]
   },
 ];
@@ -654,7 +669,7 @@ const D = {
 function startPhase1(formId) {
   const form = FORMS.find(f => f.id === formId);
   D.type = 'phase1'; D.formId = formId; D.form = form;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = 10;
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = 10; D.usedVerbs = [];
   D.queue = []; D.p2Scores = {};
 
   // Resume partial session
@@ -675,7 +690,7 @@ function startFinal(formId) {
   const form  = FORMS.find(f => f.id === formId);
   const total = Math.max(20, form.groups.length * 4);
   D.type = 'final'; D.formId = formId; D.form = form;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = total;
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = total; D.usedVerbs = [];
   D.queue = []; D.p2Scores = {};
 
   document.getElementById('drillLabel').textContent = form.name;
@@ -689,7 +704,7 @@ function startPhase2() {
   if (!config) return;
 
   D.type = 'phase2'; D.formId = null; D.form = null;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length;
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length; D.usedVerbs = [];
   D.queue = config.queue; D.p2Scores = {};
 
   // Init per-form score trackers
@@ -762,6 +777,16 @@ async function fetchSentence() {
     document.getElementById('drillSub').textContent = form.name + ' · ' + D.queue[D.index].formId;
   }
 
+  // Track used verbs to avoid repeats within a session
+  if (!D.usedVerbs) D.usedVerbs = [];
+  const usedNote = D.usedVerbs.length ? `\nAvoid these verbs already used this session: ${D.usedVerbs.join(', ')}.` : '';
+
+  // Polarity variation for たい form
+  let polarityNote = '';
+  if (form.id === 'tai') {
+    polarityNote = Math.random() < 0.5 ? '\nUse the POSITIVE form (たい — want to ~).' : '\nUse the NEGATIVE form (たくない — don\'t want to ~).';
+  }
+
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -772,19 +797,39 @@ Respond ONLY with valid JSON — no markdown, no preamble:
 {
   "sentenceParts":["before blank","after blank"],
   "englishSentence":"Complete natural English translation.",
-  "nuanceHint":"Short parenthetical hint for passive/causative/conditional where English structure gives away the form. Empty string otherwise.",
+  "nuanceHint":"Short parenthetical hint ONLY for passive/causative/conditional where English grammar reveals the Japanese form. Empty string for all other forms.",
   "answer":"correct conjugated form",
   "verbDictionary":"dictionary form",
   "verbFurigana":"(hiragana reading)"
 }
-Rules: sentenceParts has exactly 2 strings; blank replaces only the conjugated verb. englishSentence is a full natural sentence, never naming grammar forms. nuanceHint: only for forms where English structure reveals the Japanese form — e.g. "(and I was annoyed)" for adversarial passive. answer is kana/kanji as natural. N5-N4 vocab only for surrounding words.`,
-        messages:[{role:'user', content:`Form: ${form.name}. Draw from subgroup(s): ${groupContext}. Generate one natural sentence drill.`}]
+
+Rules:
+- sentenceParts: exactly 2 strings — text before and after the blank. The blank replaces only the conjugated verb.
+- englishSentence: a complete natural English sentence. Never name the grammar form (do not say "te-form", "nai-form" etc).
+- nuanceHint: only add for passive, causative, or conditional forms. Leave empty string "" for て, ない, たい, たくない and all simple forms.
+- answer: correctly conjugated verb only, in natural kana/kanji.
+- verbDictionary: the verb in plain dictionary form.
+- verbFurigana: hiragana reading in parentheses, e.g. (いく).
+- N5-N4 vocabulary only for all surrounding words in the sentence.
+
+Draw from this diverse verb pool and vary widely — do NOT repeat the same verb twice in a session:
+る-verbs: 食べる(たべる), 見る(みる), 起きる(おきる), 寝る(ねる), 着る(きる), 教える(おしえる), 覚える(おぼえる), 忘れる(わすれる), 出る(でる), 入れる(いれる), 開ける(あける), 閉める(しめる), 決める(きめる), 借りる(かりる), 降りる(おりる), 疲れる(つかれる), 続ける(つづける), 始める(はじめる), 答える(こたえる), 集める(あつめる)
+う-verbs (く): 書く(かく), 聞く(きく), 歩く(あるく), 働く(はたらく), 行く(いく)※exception, 置く(おく), 焼く(やく), 引く(ひく), 咲く(さく), 描く(かく)
+う-verbs (ぐ): 泳ぐ(およぐ), 急ぐ(いそぐ), 脱ぐ(ぬぐ), 稼ぐ(かせぐ)
+う-verbs (す): 話す(はなす), 貸す(かす), 探す(さがす), 返す(かえす), 出す(だす), 直す(なおす), 押す(おす), 消す(けす), 引っ越す(ひっこす)
+う-verbs (つ): 待つ(まつ), 持つ(もつ), 勝つ(かつ), 打つ(うつ), 立つ(たつ)
+う-verbs (う): 買う(かう), 使う(つかう), 習う(ならう), 歌う(うたう), 笑う(わらう), 手伝う(てつだう), 会う(あう), 言う(いう), 思う(おもう), 払う(はらう)
+う-verbs (る): 帰る(かえる), 取る(とる), 乗る(のる), 知る(しる), 作る(つくる), 売る(うる), 切る(きる), 送る(おくる), 降る(ふる), 走る(はしる), 太る(ふとる), 泊まる(とまる), 始まる(はじまる), 終わる(おわる)
+う-verbs (ぬ・ぶ・む): 飲む(のむ), 読む(よむ), 住む(すむ), 休む(やすむ), 遊ぶ(あそぶ), 呼ぶ(よぶ), 運ぶ(はこぶ), 飛ぶ(とぶ), 死ぬ(しぬ), 頼む(たのむ), 選ぶ(えらぶ), 楽しむ(たのしむ), 込む(こむ)
+Irregular: する, くる, 勉強する(べんきょうする), 運動する(うんどうする), 料理する(りょうりする), 電話する(でんわする), 結婚する(けっこんする), 掃除する(そうじする), 練習する(れんしゅうする), 旅行する(りょこうする)`,
+        messages:[{role:'user', content:`Form: ${form.name}. Draw from subgroup(s): ${groupContext}.${polarityNote}${usedNote} Generate one natural sentence drill.`}]
       })
     });
     const data  = await res.json();
     const raw   = data.content.map(b => b.text||'').join('');
     const item  = JSON.parse(raw.replace(/```json|```/g,'').trim());
     D.answer = item.answer;
+    if (item.verbDictionary) D.usedVerbs.push(item.verbDictionary);
     renderCard(item);
   } catch(e) {
     console.error(e);
