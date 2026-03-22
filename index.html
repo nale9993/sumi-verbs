@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>墨 Sumi — 動詞</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;500&family=Noto+Serif+JP:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#171310; --bg2:#1f1a16; --bg3:#2a231d;
+  --border:#3a2f26; --text:#e2cdb0; --text-dim:#8a7560;
+  --text-faint:#4a3d30; --amber:#c98a3a; --amber-dim:#7a4f1a;
+  --red:#b84040; --green:#4a8c5c; --cream:#f0e0c0;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:999;opacity:.6}
+.app{max-width:720px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:0 24px}
+
+/* HEADER */
+header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
+.logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--amber);letter-spacing:.05em}
+.logo-jp{font-family:'Noto Serif JP',serif;font-size:1.2rem;color:var(--text-dim)}
+.logo-sep{width:1px;height:14px;background:var(--border);display:inline-block;vertical-align:middle}
+.logo-sub{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:16px}
+.streak{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--text-dim);display:flex;align-items:center;gap:6px}
+.streak-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+
+/* TABS */
+.tab-bar{display:flex;margin-top:20px;border-bottom:1px solid var(--border)}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;padding:10px 20px;font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--text-dim);cursor:pointer;transition:color .15s,border-color .15s}
+.tab-btn:hover{color:var(--text)}
+.tab-btn.active{color:var(--amber);border-bottom-color:var(--amber)}
+
+/* VIEWS */
+.view{display:none;flex:1;flex-direction:column}
+.view.active{display:flex;animation:fadeUp .2s ease}
+
+/* LEARN BANNER */
+.learn-banner{display:none;margin-top:28px;background:linear-gradient(135deg,rgba(201,138,58,.1),rgba(201,138,58,.04));border:1px solid var(--amber-dim);border-radius:8px;padding:18px 22px;gap:16px;align-items:center;animation:fadeUp .3s ease}
+.learn-banner.visible{display:flex}
+.learn-banner-icon{font-size:1.4rem;flex-shrink:0}
+.learn-banner-body{flex:1}
+.learn-banner-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--amber);margin-bottom:4px}
+.learn-banner-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream)}
+.learn-banner-sub{font-size:.8rem;color:var(--text-dim);margin-top:2px}
+.learn-banner-btn{background:var(--amber);border:none;color:#0e0c0a;font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.12em;text-transform:uppercase;padding:9px 16px;border-radius:4px;cursor:pointer;white-space:nowrap;font-weight:500;transition:opacity .15s}
+.learn-banner-btn:hover{opacity:.85}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(10,8,6,.88);z-index:200;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(2px)}
+.modal-overlay.visible{display:flex;animation:fadeIn .2s ease}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:10px;max-width:560px;width:100%;max-height:82vh;overflow-y:auto;padding:36px 40px;animation:slideUp .25s ease}
+.modal-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--cream);margin-bottom:4px}
+.modal-subtitle{font-size:.85rem;color:var(--text-dim);margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.modal-body{font-size:.88rem;line-height:1.75;color:var(--text)}
+.modal-body p{margin-bottom:12px}
+.modal-examples{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin:14px 0;display:flex;flex-direction:column;gap:9px}
+.modal-ex-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.modal-ex-jp{font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--cream);min-width:80px}
+.modal-ex-arr{color:var(--text-faint);font-size:.8rem}
+.modal-ex-res{font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--amber)}
+.modal-ex-en{font-size:.76rem;color:var(--text-dim);margin-left:auto;font-style:italic}
+.modal-footer{margin-top:26px;padding-top:18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end}
+.got-it-btn{background:var(--amber);border:none;color:#0e0c0a;font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.15em;text-transform:uppercase;padding:12px 28px;border-radius:4px;cursor:pointer;font-weight:500;transition:opacity .15s}
+.got-it-btn:hover{opacity:.85}
+
+/* PRACTICE TAB */
+.home-hero{padding:44px 0 36px;border-bottom:1px solid var(--border)}
+.home-hero h1{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,6vw,3.2rem);font-weight:400;line-height:1.15;color:var(--cream)}
+.home-hero h1 em{font-style:italic;color:var(--amber)}
+.home-rule{width:48px;height:2px;background:var(--amber);margin:18px 0;opacity:.6}
+.home-hero p{color:var(--text-dim);font-size:.88rem;letter-spacing:.03em}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.28em;text-transform:uppercase;color:var(--text-faint);margin:32px 0 12px}
+
+/* SRS PANEL */
+.srs-panel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px 24px}
+.srs-chips-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.srs-chip{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 12px}
+.srs-chip-name{font-family:'Playfair Display',serif;font-size:.88rem;color:var(--cream)}
+.srs-chip-level{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--amber);background:rgba(201,138,58,.12);border:1px solid var(--amber-dim);border-radius:3px;padding:1px 5px;letter-spacing:.08em}
+.srs-chip-tag{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.06em}
+.srs-chip-tag.due{color:var(--green)}
+.srs-chip-tag.waiting{color:var(--text-faint)}
+.srs-panel-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.srs-panel-info{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--text-dim);letter-spacing:.04em}
+.srs-begin-btn{background:var(--amber);border:none;color:#0e0c0a;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:10px 22px;border-radius:4px;cursor:pointer;font-weight:500;transition:opacity .15s}
+.srs-begin-btn:hover{opacity:.85}
+.srs-begin-btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* FORM GRID */
+.form-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px 18px 14px;cursor:pointer;transition:border-color .15s,background .15s,opacity .15s;position:relative;overflow:hidden}
+.form-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--amber);opacity:0;transition:opacity .15s}
+.form-card:not(.state-cooldown):not(.state-unread):hover{background:var(--bg3);border-color:var(--amber-dim)}
+.form-card:not(.state-cooldown):not(.state-unread):hover::before{opacity:1}
+.form-card.state-cooldown,.form-card.state-unread{cursor:not-allowed;opacity:.55}
+.form-card.state-final-ready{border-color:var(--amber);background:rgba(201,138,58,.05)}
+.form-card.state-final-ready::before{opacity:1}
+.form-card-badge{position:absolute;top:10px;right:10px;font-family:'IBM Plex Mono',monospace;font-size:.58rem;padding:2px 6px;border-radius:3px;letter-spacing:.1em}
+.badge-active{background:rgba(201,138,58,.12);color:var(--amber);border:1px solid var(--amber-dim)}
+.badge-final{background:rgba(201,138,58,.2);color:var(--amber);border:1px solid var(--amber)}
+.badge-cooldown{background:transparent;color:var(--text-faint);border:1px solid var(--text-faint)}
+.badge-unread{background:rgba(201,138,58,.15);color:var(--amber);border:1px solid var(--amber-dim)}
+.form-card-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);margin-bottom:4px}
+.form-card-jp{font-family:'Noto Serif JP',serif;font-size:.73rem;color:var(--text-dim);margin-bottom:6px}
+.form-card-status{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--text-faint);letter-spacing:.04em;margin-top:4px}
+.form-card-status.s-ready{color:var(--green)}
+.form-card-status.s-final{color:var(--amber)}
+.form-card-status.s-unread{color:var(--amber)}
+
+.stats-bar{display:flex;gap:28px;padding:24px 0;border-top:1px solid var(--border);margin-top:auto;justify-content:center}
+.stat{display:flex;flex-direction:column;gap:3px;align-items:center}
+.stat-val{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);text-align:center}
+.stat-label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-faint);text-align:center}
+
+/* REFERENCE */
+.ref-section{margin-top:28px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.ref-section-header{padding:16px 22px;background:var(--bg2);display:flex;align-items:baseline;gap:12px;cursor:pointer;user-select:none;transition:background .15s;border-bottom:1px solid var(--border)}
+.ref-section-header:hover{background:var(--bg3)}
+.ref-section-name{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--cream)}
+.ref-section-jp{font-family:'Noto Serif JP',serif;font-size:.78rem;color:var(--text-dim)}
+.ref-section-count{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--text-faint);margin-right:10px}
+.ref-section-toggle{font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:var(--text-faint);transition:transform .2s;display:inline-block}
+.ref-section.open .ref-section-toggle{transform:rotate(180deg)}
+.ref-subgroups{display:none}
+.ref-section.open .ref-subgroups{display:block}
+.ref-subgroup{padding:20px 22px;border-bottom:1px solid var(--border)}
+.ref-subgroup:last-child{border-bottom:none}
+.ref-subgroup-title{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--amber);letter-spacing:.1em;margin-bottom:10px}
+.ref-subgroup-body{font-size:.85rem;color:var(--text);line-height:1.7;margin-bottom:12px}
+.ref-examples{background:var(--bg3);border-radius:5px;padding:12px 16px;display:flex;flex-direction:column;gap:7px}
+.ref-ex-row{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ref-ex-from{font-family:'Noto Serif JP',serif;font-size:.9rem;color:var(--text-dim)}
+.ref-ex-arr{color:var(--text-faint);font-size:.75rem}
+.ref-ex-to{font-family:'Noto Serif JP',serif;font-size:.9rem;color:var(--amber)}
+.ref-ex-en{font-size:.72rem;color:var(--text-faint);margin-left:auto;font-style:italic;font-family:'DM Sans',sans-serif}
+.ref-empty{padding:56px 0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--text-faint);letter-spacing:.1em;line-height:1.8}
+
+/* DRILL */
+.drill-header{padding:24px 0 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.drill-meta-group{display:flex;flex-direction:column;gap:3px;align-items:center}
+.drill-meta{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--text-dim);letter-spacing:.1em}
+.drill-sub{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--text-faint);letter-spacing:.08em}
+.drill-progress{display:flex;gap:2px;align-items:center;max-width:260px;flex:1;padding:0 12px}
+.progress-pip{flex:1;min-width:6px;max-width:22px;height:3px;border-radius:2px;background:var(--bg3);transition:background .3s}
+.progress-pip.correct{background:var(--green)}
+.progress-pip.wrong{background:var(--red)}
+.btn-back{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.1em;padding:6px 12px;border-radius:3px;cursor:pointer;transition:border-color .15s,color .15s}
+.btn-back:hover{border-color:var(--text-dim);color:var(--text)}
+.loading-card{display:none;margin:40px 0 28px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:36px 40px;align-items:center;gap:14px}
+.loading-card.visible{display:flex}
+.spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.loading-text{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--text-dim);letter-spacing:.08em}
+
+/* SENTENCE CARD */
+.sentence-card{display:none;margin:40px 0 20px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:32px 36px;flex-direction:column}
+.sentence-jp{font-family:'Noto Serif JP',serif;font-size:clamp(1.3rem,4vw,1.75rem);line-height:1.9;color:var(--cream);letter-spacing:.05em;margin-bottom:20px}
+.sentence-blank{display:inline-block;min-width:88px;border-bottom:2px solid var(--amber);margin:0 3px;vertical-align:baseline}
+.card-divider{height:1px;background:var(--border);margin-bottom:16px}
+.card-row{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
+.card-row:last-child{margin-bottom:0}
+.card-label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--text-faint);flex-shrink:0;min-width:36px}
+.card-en-text{font-family:'Playfair Display',serif;font-style:italic;font-size:.98rem;color:var(--text-dim);line-height:1.55}
+.card-en-text em{font-style:normal;color:var(--text-faint);font-size:.88rem}
+.card-verb{font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--text)}
+.card-verb-furi{font-family:'Noto Serif JP',serif;font-size:.82rem;color:var(--text-dim)}
+
+/* INPUT */
+.input-area{display:flex;flex-direction:column;gap:10px}
+.input-row{display:flex;gap:10px}
+.answer-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:13px 16px;color:var(--cream);font-family:'Noto Serif JP',serif;font-size:1.1rem;outline:none;transition:border-color .15s;letter-spacing:.05em}
+.answer-input:focus{border-color:var(--amber-dim)}
+.answer-input.correct{border-color:var(--green);background:rgba(74,140,92,.08)}
+.answer-input.wrong{border-color:var(--red);background:rgba(184,64,64,.08)}
+.submit-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;padding:0 18px;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.submit-btn:hover{background:var(--amber);border-color:var(--amber);color:#0e0c0a}
+.feedback{display:none;padding:13px 16px;border-radius:5px;font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.04em;animation:fadeUp .2s ease}
+.feedback.correct{display:block;background:rgba(74,140,92,.1);border:1px solid var(--green);color:var(--green)}
+.feedback.wrong{display:block;background:rgba(184,64,64,.08);border:1px solid var(--red);color:#d06060}
+.feedback-answer{margin-top:6px;font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--cream)}
+.next-btn{display:none;align-self:flex-end;background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;padding:8px 18px;border-radius:4px;cursor:pointer;transition:border-color .15s,color .15s}
+.next-btn.visible{display:block}
+.next-btn:hover{border-color:var(--amber);color:var(--amber)}
+.drill-stats-bar{display:flex;gap:28px;padding:20px 0;border-top:1px solid var(--border);margin-top:auto}
+
+/* RESET */
+.reset-row{text-align:center;padding:16px 0 32px}
+.reset-btn{background:none;border:none;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;text-decoration:underline;transition:color .15s}
+.reset-btn:hover{color:var(--red)}
+
+/* ANIMATIONS */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:500px){
+  .app{padding:0 16px}
+  .sentence-card{padding:22px 18px}
+  .form-grid{grid-template-columns:1fr 1fr}
+  .stats-bar,.drill-stats-bar{gap:16px;flex-wrap:wrap}
+  .modal{padding:24px 18px}
+  .learn-banner{flex-wrap:wrap}
+  .srs-panel-footer{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <span class="logo">墨 Sumi</span><span class="logo-sep"></span>
+  <span class="logo-jp">動詞</span><span class="logo-sep"></span>
+  <span class="logo-sub">Verb Forms</span>
+  <div class="header-right">
+    <div class="streak"><div class="streak-dot"></div><span id="streakCount">0 day streak</span></div>
+  </div>
+</header>
+
+<div class="tab-bar" id="mainTabBar">
+  <button class="tab-btn active" onclick="switchTab('practice')">Practice</button>
+  <button class="tab-btn" onclick="switchTab('reference')">Reference</button>
+</div>
+
+<!-- ══ PRACTICE ══ -->
+<div class="view active" id="view-practice">
+  <div class="learn-banner" id="learnBanner">
+    <div class="learn-banner-icon">📖</div>
+    <div class="learn-banner-body">
+      <div class="learn-banner-label">New Unlock</div>
+      <div class="learn-banner-title" id="bannerTitle"></div>
+      <div class="learn-banner-sub">Study this pattern before you drill it.</div>
+    </div>
+    <button class="learn-banner-btn" onclick="openModal()">Study Now</button>
+  </div>
+
+  <div class="home-hero">
+    <h1>Conjugate<br>with <em>confidence.</em></h1>
+    <div class="home-rule"></div>
+  </div>
+
+  <div id="learningSection">
+    <div class="section-label">In Progress</div>
+    <div class="form-grid" id="formGrid"></div>
+  </div>
+
+  <div id="srsSection" style="display:none">
+    <div class="section-label">SRS Review</div>
+    <div class="srs-panel">
+      <div class="srs-chips-row" id="srsChips"></div>
+      <div class="srs-panel-footer">
+        <div class="srs-panel-info" id="srsPanelInfo"></div>
+        <button class="srs-begin-btn" id="srsBeginBtn" onclick="startPhase2()">Begin Review →</button>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:auto;padding-top:20px"></div>
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-val" id="statTotal">0</div><div class="stat-label">Total Drills</div></div>
+    <div class="stat"><div class="stat-val" id="statToday">0</div><div class="stat-label">Today</div></div>
+  </div>
+</div>
+
+<!-- ══ REFERENCE ══ -->
+<div class="view" id="view-reference">
+  <div style="padding-top:4px"></div>
+  <div id="refContent">
+    <div class="ref-empty" id="refEmpty">Confirm your first learning card<br>to begin building your reference library.</div>
+  </div>
+  <div style="height:40px"></div>
+</div>
+
+<!-- ══ DRILL ══ -->
+<div class="view" id="view-drill">
+  <div class="drill-header">
+    <button class="btn-back" onclick="exitDrill()">← Exit</button>
+    <div class="drill-meta-group">
+      <div class="drill-meta" id="drillLabel">て-form</div>
+      <div class="drill-sub" id="drillSub"></div>
+    </div>
+    <div class="drill-progress" id="drillProgress"></div>
+  </div>
+
+  <div class="loading-card" id="loadingCard">
+    <div class="spinner"></div>
+    <div class="loading-text">Generating sentence…</div>
+  </div>
+
+  <div class="sentence-card" id="sentenceCard">
+    <div class="sentence-jp" id="sentenceJP"></div>
+    <div class="card-divider"></div>
+    <div class="card-row"><span class="card-label">EN</span><span class="card-en-text" id="cardEn"></span></div>
+    <div class="card-row"><span class="card-label">Verb</span><span class="card-verb" id="cardVerb"></span><span class="card-verb-furi" id="cardFuri"></span></div>
+  </div>
+
+  <div class="input-area" id="inputArea" style="display:none">
+    <div class="input-row">
+      <input class="answer-input" id="answerInput" type="text" placeholder="答えを入力…" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <button class="submit-btn" onclick="checkAnswer()">Check</button>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
+  </div>
+
+  <div class="drill-stats-bar">
+    <div class="stat"><div class="stat-val" id="drillCorrect">0</div><div class="stat-label">Correct</div></div>
+    <div class="stat"><div class="stat-val" id="drillWrong">0</div><div class="stat-label">Wrong</div></div>
+    <div class="stat"><div class="stat-val" id="drillRemaining">10</div><div class="stat-label">Remaining</div></div>
+  </div>
+</div>
+
+<!-- ══ MODAL ══ -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-eyebrow" id="modalEyebrow">New Form Unlocked</div>
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-subtitle" id="modalSubtitle"></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer"><button class="got-it-btn" id="gotItBtn" onclick="confirmCard()">Got it ✓</button></div>
+  </div>
+</div>
+
+<div class="reset-row">
+  <button class="reset-btn" onclick="confirmReset()">Reset all progress</button>
+</div>
+
+</div><!-- /app -->
+<script>
+// ════════════════════════════════════════════
+// FORMS DATA
+// ════════════════════════════════════════════
+const FORMS = [
+  {
+    id:'te', name:'て-form', jpEx:'食べて・書いて',
+    groups:[
+      { id:'te-ru', name:'る-verbs',
+        body:`<p>る-verbs (ichidan) are the simplest case. Drop the final る and add て. No exceptions, no sound changes — the stem never changes.</p>`,
+        examples:[{from:'食べる',to:'食べて',en:'to eat → (please) eat'},{from:'見る',to:'見て',en:'to see → (please) see'},{from:'起きる',to:'起きて',en:'to wake up → waking up'},{from:'教える',to:'教えて',en:'to teach → please teach me'}]},
+      { id:'te-ku', name:'う-verbs: く → いて',
+        body:`<p>For う-verbs ending in く, the く shifts to いて. One famous exception: 行く → 行って (not 行いて). The only く-verb that breaks the rule.</p>`,
+        examples:[{from:'書く',to:'書いて',en:'to write → (please) write'},{from:'聞く',to:'聞いて',en:'to listen → please listen'},{from:'歩く',to:'歩いて',en:'to walk → walking'},{from:'行く ⚠',to:'行って',en:'to go → going (exception!)'}]},
+      { id:'te-gu', name:'う-verbs: ぐ → いで',
+        body:`<p>Verbs ending in ぐ follow the same vowel shift as く but preserve the voiced sound, giving いで instead of いて.</p>`,
+        examples:[{from:'泳ぐ',to:'泳いで',en:'to swim → swimming'},{from:'急ぐ',to:'急いで',en:'to hurry → please hurry'}]},
+      { id:'te-su', name:'う-verbs: す → して',
+        body:`<p>Verbs ending in す always become して. This is its own pattern — not the standard vowel-row logic. す → して, every time.</p>`,
+        examples:[{from:'話す',to:'話して',en:'to speak → please speak'},{from:'貸す',to:'貸して',en:'to lend → please lend me'},{from:'探す',to:'探して',en:'to search → searching'}]},
+      { id:'te-tsu', name:'う-verbs: つ・う・る → って',
+        body:`<p>Verbs ending in つ, う, or る (う-verbs only) all share て-form って. Distinguish る-ending う-verbs (→ って) from る-verbs (→ て) through vocabulary knowledge.</p>`,
+        examples:[{from:'待つ',to:'待って',en:'to wait → please wait'},{from:'買う',to:'買って',en:'to buy → buying'},{from:'取る',to:'取って',en:'to take → please take it'},{from:'帰る',to:'帰って',en:'to return home → going home'}]},
+      { id:'te-mu', name:'う-verbs: ぬ・ぶ・む → んで',
+        body:`<p>Verbs ending in ぬ, ぶ, or む all change to んで. The nasal ん absorbs the consonant and voiced で follows. Covers common verbs like 飲む and 読む.</p>`,
+        examples:[{from:'飲む',to:'飲んで',en:'to drink → (please) drink'},{from:'読む',to:'読んで',en:'to read → (please) read'},{from:'遊ぶ',to:'遊んで',en:'to play → playing'},{from:'死ぬ',to:'死んで',en:'to die → dying'}]},
+    ]
+  },
+  {
+    id:'nai', name:'ない-form', jpEx:'食べない・書かない',
+    groups:[
+      { id:'nai-ru', name:'る-verbs',
+        body:`<p>Drop る, add ない. Exactly parallel to て-form for る-verbs — the stem stays the same, only the ending changes.</p>`,
+        examples:[{from:'食べる',to:'食べない',en:"don't eat"},{from:'見る',to:'見ない',en:"don't see"},{from:'起きる',to:'起きない',en:"don't wake up"}]},
+      { id:'nai-u', name:'う-verbs + the わ exception',
+        body:`<p>Shift the final kana to the あ-row and add ない. Critical exception: verbs ending in う become わない (not あない). The わ is a historical form that appears here and only here.</p>`,
+        examples:[{from:'書く',to:'書かない',en:"don't write"},{from:'話す',to:'話さない',en:"don't speak"},{from:'待つ',to:'待たない',en:"don't wait"},{from:'買う',to:'買わない',en:"don't buy (わ exception!)"},{from:'飲む',to:'飲まない',en:"don't drink"}]},
+    ]
+  },
+  {
+    id:'tai', name:'たい', jpEx:'食べたい・飲みたい',
+    groups:[
+      { id:'tai-all', name:'All verb types',
+        body:`<p>たい expresses the speaker's own desire: "I want to ~." Attach to the ます-stem. たい conjugates like an い-adjective: 食べたくない (don't want to eat), 食べたかった (wanted to eat). For third-party desires, use たがっている.</p>`,
+        examples:[{from:'食べる',to:'食べたい',en:'want to eat'},{from:'飲む',to:'飲みたい',en:'want to drink'},{from:'行く',to:'行きたい',en:'want to go'},{from:'見る',to:'見たい',en:'want to see'}]},
+    ]
+  },
+];
+
+// ════════════════════════════════════════════
+// SRS CONSTANTS
+// ════════════════════════════════════════════
+const CD = {
+  FAIL:    1   * 3600000,   // 1h
+  PASS1:   4   * 3600000,   // 4h (first pass / new subgroup)
+  FINAL_GATE: 12 * 3600000, // 12h before final
+  P2_MIN:  4   * 3600000,   // min 4h between phase2 sessions
+};
+
+const SRS_CD = [
+  4   * 3600000,   // 0:  4h
+  86400000,        // 1:  1d
+  129600000,       // 2:  1.5d
+  172800000,       // 3:  2d
+  172800000,       // 4:  2d
+  259200000,       // 5:  3d
+  259200000,       // 6:  3d
+  345600000,       // 7:  4d
+  432000000,       // 8:  5d
+  518400000,       // 9:  6d
+  604800000,       // 10: 1w
+];
+
+// ════════════════════════════════════════════
+// STORAGE
+// ════════════════════════════════════════════
+const LS = k => { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } };
+const SS = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+// formStates: { [formId]: { phase, unlockedGroupIds, consecutivePasses, cooldownUntil,
+//   allGroupsUnlocked, finalCooldownUntil, srsLevel, srsCooldownUntil } }
+let formStates  = LS('sv-fs')  || {};
+let readCards   = LS('sv-rc')  || [];
+let globalSt    = LS('sv-gl')  || { p2CooldownUntil: 0, p2LastExcludedId: null };
+let stats       = LS('sv-st')  || { total: 0, today: 0, lastDate: '' };
+let savedSess   = LS('sv-ss')  || null;
+
+function saveAll() {
+  SS('sv-fs', formStates); SS('sv-rc', readCards);
+  SS('sv-gl', globalSt);   SS('sv-st', stats);
+}
+
+// ════════════════════════════════════════════
+// FORM STATE HELPERS
+// ════════════════════════════════════════════
+function initFirstForm() {
+  if (!formStates[FORMS[0].id]) {
+    formStates[FORMS[0].id] = makeFormState(FORMS[0]);
+    saveAll();
+  }
+}
+
+function makeFormState(form) {
+  return {
+    phase: 'learning',
+    unlockedGroupIds: [form.groups[0].id],
+    consecutivePasses: 0,
+    cooldownUntil: 0,
+    allGroupsUnlocked: form.groups.length === 1,
+    finalCooldownUntil: 0,
+    srsLevel: 0,
+    srsCooldownUntil: 0,
+  };
+}
+
+function getState(formId) { return formStates[formId]; }
+
+function hasUnreadCard(formId) {
+  const state = getState(formId);
+  if (!state) return false;
+  const form = FORMS.find(f => f.id === formId);
+  return form.groups.some(g => state.unlockedGroupIds.includes(g.id) && !readCards.includes(g.id));
+}
+
+function isFormDrillable(formId) {
+  const state = getState(formId);
+  if (!state || state.phase !== 'learning') return false;
+  if (hasUnreadCard(formId)) return false;
+  if (Date.now() < state.cooldownUntil) return false;
+  // Don't allow regular drilling if final is already cooling (but do allow it — they can keep practicing)
+  return true;
+}
+
+function isFinalReady(formId) {
+  const state = getState(formId);
+  if (!state || state.phase !== 'learning') return false;
+  if (!state.allGroupsUnlocked || !state.finalCooldownUntil) return false;
+  return Date.now() >= state.finalCooldownUntil;
+}
+
+// ════════════════════════════════════════════
+// SESSION COMPLETION HANDLERS
+// ════════════════════════════════════════════
+function handlePhase1Complete(formId, correct) {
+  const state = getState(formId);
+  const form  = FORMS.find(f => f.id === formId);
+  const passed = correct >= 9;
+  const now    = Date.now();
+
+  if (!passed) {
+    state.consecutivePasses = 0;
+    state.cooldownUntil     = now + CD.FAIL;
+  } else {
+    state.consecutivePasses++;
+    state.cooldownUntil = now + CD.PASS1;
+
+    if (state.consecutivePasses >= 2) {
+      state.consecutivePasses = 0;
+
+      if (!state.allGroupsUnlocked) {
+        // Unlock next subgroup
+        const nextIdx = state.unlockedGroupIds.length;
+        if (nextIdx < form.groups.length) {
+          state.unlockedGroupIds.push(form.groups[nextIdx].id);
+          if (state.unlockedGroupIds.length === form.groups.length) {
+            state.allGroupsUnlocked = true;
+          }
+        }
+        // cooldownUntil already set to 4h above — new subgroup available after 4h
+      } else {
+        // All groups unlocked — trigger 12h final gate (only once)
+        if (!state.finalCooldownUntil) {
+          state.finalCooldownUntil = now + CD.FINAL_GATE;
+        }
+      }
+    }
+  }
+
+  stats.total++;
+  tickToday();
+  saveAll();
+}
+
+function handleFinalComplete(formId, correct, total) {
+  const state       = getState(formId);
+  const passNeeded  = Math.ceil(total * 0.85);
+  const passed      = correct >= passNeeded;
+  const now         = Date.now();
+
+  if (passed) {
+    state.phase            = 'srs';
+    state.srsLevel         = 0;
+    state.srsCooldownUntil = now + SRS_CD[0];
+    state.finalCooldownUntil = 0;
+
+    // Unlock next form
+    const idx = FORMS.findIndex(f => f.id === formId);
+    if (idx < FORMS.length - 1) {
+      const nf = FORMS[idx + 1];
+      if (!formStates[nf.id]) {
+        formStates[nf.id] = makeFormState(nf);
+      }
+    }
+  } else {
+    // Failed: reset consecutive + final gate so they must earn 2 in a row again
+    state.consecutivePasses  = 0;
+    state.finalCooldownUntil = 0;
+    state.cooldownUntil      = now + CD.FAIL;
+  }
+
+  stats.total++;
+  tickToday();
+  saveAll();
+}
+
+function handlePhase2Complete(scores) {
+  // scores: { formId: { correct, total } }
+  const now = Date.now();
+
+  for (const [formId, sc] of Object.entries(scores)) {
+    const state = getState(formId);
+    if (!state || state.phase !== 'srs') continue;
+
+    const { correct, total } = sc;
+    let delta = 0;
+
+    if (total === 10) {
+      if (correct >= 9)      delta =  1;
+      else if (correct >= 7) delta = -1;
+      else                   delta = -2;
+    } else if (total === 7) {
+      if (correct >= 6)      delta =  1;
+      else if (correct >= 5) delta = -1;
+      else                   delta = -2;
+    } else { // 6
+      if (correct === 6)     delta =  1;
+      else if (correct === 5)delta = -1;
+      else                   delta = -2;
+    }
+
+    const newLevel         = Math.max(0, Math.min(10, state.srsLevel + delta));
+    state.srsLevel         = newLevel;
+    state.srsCooldownUntil = now + SRS_CD[newLevel];
+  }
+
+  globalSt.p2CooldownUntil = now + CD.P2_MIN;
+  stats.total++;
+  tickToday();
+  saveAll();
+}
+
+function tickToday() {
+  const today = new Date().toDateString();
+  if (stats.lastDate !== today) { stats.today = 0; stats.lastDate = today; }
+  stats.today++;
+}
+
+// ════════════════════════════════════════════
+// PHASE 2 SESSION BUILDER
+// ════════════════════════════════════════════
+function getSRSForms() {
+  return FORMS.filter(f => getState(f.id)?.phase === 'srs');
+}
+
+function getDueSRSForms() {
+  const now = Date.now();
+  return getSRSForms().filter(f => now >= (getState(f.id)?.srsCooldownUntil || 0));
+}
+
+function isPhase2Ready() {
+  return Date.now() >= globalSt.p2CooldownUntil && getDueSRSForms().length > 0;
+}
+
+function buildPhase2Queue() {
+  let due = getDueSRSForms();
+  if (!due.length) return null;
+
+  let formsToUse = due;
+  if (due.length > 5) {
+    // Rotate exclusion: exclude one that isn't the last excluded
+    const candidates = due.filter(f => f.id !== globalSt.p2LastExcludedId);
+    const toExclude  = candidates[candidates.length - 1];
+    formsToUse = due.filter(f => f.id !== toExclude.id).slice(0, 5);
+    globalSt.p2LastExcludedId = toExclude.id;
+  }
+
+  const qpf = formsToUse.length <= 3 ? 10 : formsToUse.length === 4 ? 7 : 6;
+
+  const queue = [];
+  for (const form of formsToUse)
+    for (let i = 0; i < qpf; i++)
+      queue.push({ formId: form.id, form });
+
+  // Fisher-Yates shuffle
+  for (let i = queue.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [queue[i], queue[j]] = [queue[j], queue[i]];
+  }
+
+  return { queue, qpf, formsUsed: formsToUse };
+}
+
+// ════════════════════════════════════════════
+// DRILL STATE
+// ════════════════════════════════════════════
+const D = {
+  type:    null,   // 'phase1' | 'final' | 'phase2'
+  formId:  null,
+  form:    null,
+  answer:  null,
+  correct: 0,
+  wrong:   0,
+  index:   0,
+  total:   10,
+  queue:   [],     // phase2 only
+  p2Scores: {},    // phase2 only: { formId: { correct, total } }
+};
+
+// ════════════════════════════════════════════
+// START DRILLS
+// ════════════════════════════════════════════
+function startPhase1(formId) {
+  const form = FORMS.find(f => f.id === formId);
+  D.type = 'phase1'; D.formId = formId; D.form = form;
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = 10;
+  D.queue = []; D.p2Scores = {};
+
+  // Resume partial session
+  if (savedSess?.type === 'phase1' && savedSess?.formId === formId && savedSess.index < 10) {
+    D.correct = savedSess.correct;
+    D.wrong   = savedSess.wrong;
+    D.index   = savedSess.index;
+  }
+  savedSess = null; SS('sv-ss', null);
+
+  document.getElementById('drillLabel').textContent = form.name;
+  document.getElementById('drillSub').textContent   = 'Learning';
+  initDrillView(D.total, D.index);
+  fetchSentence();
+}
+
+function startFinal(formId) {
+  const form  = FORMS.find(f => f.id === formId);
+  const total = Math.max(20, form.groups.length * 4);
+  D.type = 'final'; D.formId = formId; D.form = form;
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = total;
+  D.queue = []; D.p2Scores = {};
+
+  document.getElementById('drillLabel').textContent = form.name;
+  document.getElementById('drillSub').textContent   = 'Final Review — ' + total + ' questions';
+  initDrillView(D.total, 0);
+  fetchSentence();
+}
+
+function startPhase2() {
+  const config = buildPhase2Queue();
+  if (!config) return;
+
+  D.type = 'phase2'; D.formId = null; D.form = null;
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length;
+  D.queue = config.queue; D.p2Scores = {};
+
+  // Init per-form score trackers
+  for (const item of config.queue) {
+    if (!D.p2Scores[item.formId]) D.p2Scores[item.formId] = { correct: 0, total: 0 };
+    D.p2Scores[item.formId].total++;
+  }
+
+  document.getElementById('drillLabel').textContent = 'Mixed Review';
+  document.getElementById('drillSub').textContent   = config.formsUsed.map(f => f.name).join(' · ');
+  initDrillView(D.total, 0);
+  fetchSentence();
+}
+
+function initDrillView(total, startIndex) {
+  // Build pips
+  const pc = document.getElementById('drillProgress');
+  pc.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const pip = document.createElement('div');
+    pip.className = 'progress-pip';
+    pc.appendChild(pip);
+  }
+  // Mark already-answered pips if resuming
+  const pips = pc.querySelectorAll('.progress-pip');
+  // (can't know past results from saved session, just leave them blank)
+
+  document.getElementById('drillCorrect').textContent   = D.correct;
+  document.getElementById('drillWrong').textContent     = D.wrong;
+  document.getElementById('drillRemaining').textContent = D.total - D.index;
+  showDrillView();
+}
+
+// ════════════════════════════════════════════
+// FETCH SENTENCE
+// ════════════════════════════════════════════
+async function fetchSentence() {
+  const lc = document.getElementById('loadingCard');
+  const sc = document.getElementById('sentenceCard');
+  const ia = document.getElementById('inputArea');
+
+  lc.classList.add('visible');
+  sc.style.display = 'none';
+  ia.style.display = 'none';
+
+  let form, groupContext, newestGroupName;
+
+  if (D.type === 'phase2') {
+    const qi = D.queue[D.index];
+    form = qi.form;
+    const st = getState(form.id);
+    const allGroups = form.groups.filter(g => st.unlockedGroupIds.includes(g.id));
+    groupContext = allGroups.map(g => g.name).join(', ');
+    newestGroupName = null; // all groups equal in phase2
+  } else {
+    form = D.form;
+    const st = getState(form.id);
+    const allGroups = form.groups.filter(g => st.unlockedGroupIds.includes(g.id));
+    newestGroupName = allGroups[allGroups.length - 1]?.name;
+    // 50% weight toward newest group
+    if (allGroups.length > 1 && Math.random() < 0.5) {
+      groupContext = newestGroupName;
+    } else {
+      groupContext = allGroups.map(g => g.name).join(', ');
+    }
+  }
+
+  // Show current form in drill sub for phase2
+  if (D.type === 'phase2') {
+    document.getElementById('drillSub').textContent = form.name + ' · ' + D.queue[D.index].formId;
+  }
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        system:`You are a Japanese verb conjugation drill generator for JLPT N5-N4 learners.
+Respond ONLY with valid JSON — no markdown, no preamble:
+{
+  "sentenceParts":["before blank","after blank"],
+  "englishSentence":"Complete natural English translation.",
+  "nuanceHint":"Short parenthetical hint for passive/causative/conditional where English structure gives away the form. Empty string otherwise.",
+  "answer":"correct conjugated form",
+  "verbDictionary":"dictionary form",
+  "verbFurigana":"(hiragana reading)"
+}
+Rules: sentenceParts has exactly 2 strings; blank replaces only the conjugated verb. englishSentence is a full natural sentence, never naming grammar forms. nuanceHint: only for forms where English structure reveals the Japanese form — e.g. "(and I was annoyed)" for adversarial passive. answer is kana/kanji as natural. N5-N4 vocab only for surrounding words.`,
+        messages:[{role:'user', content:`Form: ${form.name}. Draw from subgroup(s): ${groupContext}. Generate one natural sentence drill.`}]
+      })
+    });
+    const data  = await res.json();
+    const raw   = data.content.map(b => b.text||'').join('');
+    const item  = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    D.answer = item.answer;
+    renderCard(item);
+  } catch(e) {
+    console.error(e);
+    D.answer = '食べたい';
+    renderCard({ sentenceParts:['今夜、寿司を','。'], englishSentence:'Tonight, I want to eat sushi.', nuanceHint:'', answer:'食べたい', verbDictionary:'食べる', verbFurigana:'(たべる)' });
+  }
+
+  lc.classList.remove('visible');
+  sc.style.display = 'flex';
+  ia.style.display = 'flex';
+
+  const inp = document.getElementById('answerInput');
+  inp.value = ''; inp.className = 'answer-input'; inp.focus();
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('nextBtn').className  = 'next-btn';
+  inp.onkeydown = e => { if(e.key==='Enter') checkAnswer(); };
+}
+
+function renderCard(item) {
+  document.getElementById('sentenceJP').innerHTML =
+    item.sentenceParts[0] + '<span class="sentence-blank">　　　　</span>' + item.sentenceParts[1];
+  const hint = item.nuanceHint ? ` <em>(${item.nuanceHint})</em>` : '';
+  document.getElementById('cardEn').innerHTML   = item.englishSentence + hint;
+  document.getElementById('cardVerb').textContent = item.verbDictionary;
+  document.getElementById('cardFuri').textContent = item.verbFurigana;
+}
+
+// ════════════════════════════════════════════
+// CHECK / NEXT
+// ════════════════════════════════════════════
+function checkAnswer() {
+  const inp   = document.getElementById('answerInput');
+  const fb    = document.getElementById('feedback');
+  const nb    = document.getElementById('nextBtn');
+  const ans   = inp.value.trim();
+  if (!ans) return;
+
+  const ci      = D.index; // current question index before increment
+  const correct = ans === D.answer;
+
+  if (correct) {
+    inp.classList.add('correct');
+    fb.className = 'feedback correct'; fb.textContent = '✓ Correct!';
+    D.correct++;
+    if (D.type === 'phase2') D.p2Scores[D.queue[ci].formId].correct++;
+  } else {
+    inp.classList.add('wrong');
+    fb.className = 'feedback wrong';
+    fb.innerHTML = `✗ Not quite.<div class="feedback-answer">${D.answer}</div>`;
+    D.wrong++;
+  }
+
+  D.index++;
+  const pips = document.querySelectorAll('.progress-pip');
+  if (pips[ci]) pips[ci].classList.add(correct ? 'correct' : 'wrong');
+
+  document.getElementById('drillCorrect').textContent   = D.correct;
+  document.getElementById('drillWrong').textContent     = D.wrong;
+  document.getElementById('drillRemaining').textContent = D.total - D.index;
+
+  nb.className = 'next-btn visible';
+  inp.onkeydown = e => { if(e.key==='Enter') nextQuestion(); };
+}
+
+function nextQuestion() {
+  if (D.index >= D.total) {
+    endSession();
+    return;
+  }
+  fetchSentence();
+}
+
+function endSession() {
+  if (D.type === 'phase1')      handlePhase1Complete(D.formId, D.correct);
+  else if (D.type === 'final')  handleFinalComplete(D.formId, D.correct, D.total);
+  else if (D.type === 'phase2') handlePhase2Complete(D.p2Scores);
+
+  SS('sv-ss', null);
+  document.getElementById('mainTabBar').style.display = '';
+  switchTab('practice');
+  updateHomeStats();
+}
+
+// ════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) =>
+    b.classList.toggle('active', (tab==='practice'&&i===0)||(tab==='reference'&&i===1)));
+  document.getElementById('view-practice').classList.toggle('active', tab==='practice');
+  document.getElementById('view-reference').classList.toggle('active', tab==='reference');
+  document.getElementById('view-drill').classList.remove('active');
+  if (tab === 'practice')  renderPracticeTab();
+  if (tab === 'reference') renderReference();
+}
+
+function showDrillView() {
+  ['view-practice','view-reference'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('view-drill').classList.add('active');
+  document.getElementById('mainTabBar').style.display = 'none';
+}
+
+function exitDrill() {
+  // Save partial phase1/final session
+  if (D.type === 'phase1' || D.type === 'final') {
+    SS('sv-ss', { type: D.type, formId: D.formId, correct: D.correct, wrong: D.wrong, index: D.index });
+  }
+  document.getElementById('mainTabBar').style.display = '';
+  switchTab('practice');
+  updateHomeStats();
+}
+
+// ════════════════════════════════════════════
+// BANNER & MODAL
+// ════════════════════════════════════════════
+function getPendingCard() {
+  const now = Date.now();
+  for (const f of FORMS)
+    for (const g of f.groups) {
+      const st = formStates[f.id];
+      if (!st) continue;
+      if (!st.unlockedGroupIds.includes(g.id)) continue;
+      if (readCards.includes(g.id)) continue;
+      // Don't show banner until the cooldown on this form has passed
+      if (now < (st.cooldownUntil || 0)) continue;
+      return { form: f, group: g };
+    }
+  return null;
+}
+
+function updateBanner() {
+  const p = getPendingCard();
+  const banner = document.getElementById('learnBanner');
+  if (p) {
+    document.getElementById('bannerTitle').textContent = `${p.form.name} — ${p.group.name}`;
+    banner.classList.add('visible');
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+let modalGroupId = null;
+
+function openModal(groupId) {
+  let target;
+  if (groupId) {
+    for (const f of FORMS) { const g = f.groups.find(g => g.id === groupId); if(g){target={form:f,group:g};break;} }
+  } else {
+    target = getPendingCard();
+  }
+  if (!target) return;
+
+  modalGroupId = target.group.id;
+  const isNew  = !readCards.includes(target.group.id);
+
+  document.getElementById('modalEyebrow').textContent  = isNew ? 'New Form Unlocked' : 'Form Reference';
+  document.getElementById('modalTitle').textContent    = target.form.name;
+  document.getElementById('modalSubtitle').textContent = target.group.name;
+
+  let exHTML = '<div class="modal-examples">';
+  for (const ex of target.group.examples)
+    exHTML += `<div class="modal-ex-row"><span class="modal-ex-jp">${ex.from}</span><span class="modal-ex-arr">→</span><span class="modal-ex-res">${ex.to}</span><span class="modal-ex-en">${ex.en}</span></div>`;
+  exHTML += '</div>';
+
+  document.getElementById('modalBody').innerHTML = target.group.body + exHTML;
+  const btn = document.getElementById('gotItBtn');
+  btn.textContent = isNew ? 'Got it ✓' : 'Close';
+  document.getElementById('modalOverlay').classList.add('visible');
+}
+
+
+
+function confirmCard() {
+  if (modalGroupId && !readCards.includes(modalGroupId)) {
+    readCards.push(modalGroupId);
+    SS('sv-rc', readCards);
+  }
+  document.getElementById('modalOverlay').classList.remove('visible');
+  renderPracticeTab();
+  renderReference();
+}
+
+// ════════════════════════════════════════════
+// RENDER PRACTICE TAB
+// ════════════════════════════════════════════
+function fmtCd(ms) {
+  if (ms <= 0) return 'Ready';
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+function renderPracticeTab() {
+  updateBanner();
+  renderSRSSection();
+  renderFormGrid();
+  updateHomeStats();
+}
+
+function renderSRSSection() {
+  const srsForms = getSRSForms();
+  const sec      = document.getElementById('srsSection');
+  if (!srsForms.length) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+
+  const now    = Date.now();
+  const due    = getDueSRSForms();
+  const ready  = isPhase2Ready();
+  const chips  = document.getElementById('srsChips');
+  chips.innerHTML = '';
+
+  for (const f of srsForms) {
+    const st   = getState(f.id);
+    const isDue = now >= (st.srsCooldownUntil || 0);
+    chips.innerHTML += `<div class="srs-chip">
+      <span class="srs-chip-name">${f.name}</span>
+      <span class="srs-chip-level">Lv ${st.srsLevel}</span>
+      <span class="srs-chip-tag ${isDue?'due':'waiting'}">${isDue ? '● due' : fmtCd((st.srsCooldownUntil||0)-now)}</span>
+    </div>`;
+  }
+
+  const info = document.getElementById('srsPanelInfo');
+  const btn  = document.getElementById('srsBeginBtn');
+
+  if (ready) {
+    info.textContent = `${due.length} form${due.length>1?'s':''} due · ${due.length<=3?due.length*10:due.length===4?28:30} questions`;
+    btn.disabled = false;
+  } else if (srsForms.length > 0 && !due.length) {
+    const nextDue = Math.min(...srsForms.map(f => getState(f.id).srsCooldownUntil||0));
+    const p2cd   = globalSt.p2CooldownUntil || 0;
+    const waitMs = Math.max(nextDue, p2cd) - now;
+    info.textContent = `Next review in ${fmtCd(waitMs)}`;
+    btn.disabled = true;
+  } else {
+    info.textContent = `Global cooldown: ${fmtCd((globalSt.p2CooldownUntil||0) - now)}`;
+    btn.disabled = true;
+  }
+}
+
+function renderFormGrid() {
+  const grid    = document.getElementById('formGrid');
+  const section = document.getElementById('learningSection');
+  grid.innerHTML = '';
+
+  const now    = Date.now();
+  const lForms = FORMS.filter(f => getState(f.id)?.phase === 'learning');
+
+  if (!lForms.length) { section.style.display = 'none'; return; }
+  section.style.display = 'block';
+
+  for (const form of lForms) {
+    const state     = getState(form.id);
+    const unread    = hasUnreadCard(form.id);
+    const cdLeft    = (state.cooldownUntil || 0) - now;
+    const finalReady = isFinalReady(form.id);
+    const finalCooling = state.allGroupsUnlocked && state.finalCooldownUntil && now < state.finalCooldownUntil;
+
+    let cardClass = 'form-card', badgeHTML = '', statusHTML = '';
+
+    if (unread) {
+      cardClass += ' state-unread';
+      badgeHTML  = `<span class="form-card-badge badge-unread">Lesson</span>`;
+      statusHTML = `<div class="form-card-status s-unread">Study lesson first</div>`;
+    } else if (finalReady) {
+      cardClass += ' state-final-ready';
+      badgeHTML  = `<span class="form-card-badge badge-final">Final ★</span>`;
+      statusHTML = `<div class="form-card-status s-final">Final review ready</div>`;
+    } else if (finalCooling) {
+      badgeHTML  = `<span class="form-card-badge badge-cooldown">Final</span>`;
+      statusHTML = `<div class="form-card-status">Final in ${fmtCd(state.finalCooldownUntil - now)}</div>`;
+    } else if (cdLeft > 0) {
+      cardClass += ' state-cooldown';
+      badgeHTML  = `<span class="form-card-badge badge-cooldown">${fmtCd(cdLeft)}</span>`;
+      statusHTML = `<div class="form-card-status">${fmtCd(cdLeft)}</div>`;
+    } else {
+      badgeHTML  = `<span class="form-card-badge badge-active">${state.unlockedGroupIds.length} group${state.unlockedGroupIds.length>1?'s':''}</span>`;
+      statusHTML = `<div class="form-card-status s-ready">Ready</div>`;
+    }
+
+    const groups = form.groups.filter(g => state.unlockedGroupIds.includes(g.id));
+    const grpText = groups.map(g => g.name).join(' · ');
+
+    const card = document.createElement('div');
+    card.className = cardClass;
+    card.innerHTML = `
+      ${badgeHTML}
+      <div class="form-card-name">${form.name}</div>
+      <div class="form-card-jp">${form.jpEx}</div>
+      <div class="form-card-groups" style="font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--text-faint);letter-spacing:.04em">${grpText}</div>
+      ${statusHTML}`;
+
+    if (finalReady) {
+      card.onclick = () => startFinal(form.id);
+    } else if (!unread && cdLeft <= 0) {
+      card.onclick = () => startPhase1(form.id);
+    }
+
+    grid.appendChild(card);
+  }
+}
+
+// ════════════════════════════════════════════
+// REFERENCE
+// ════════════════════════════════════════════
+function renderReference() {
+  const content = document.getElementById('refContent');
+  content.querySelectorAll('.ref-section').forEach(s => s.remove());
+
+  let any = false;
+  for (const form of FORMS) {
+    const confirmed = form.groups.filter(g =>
+      formStates[form.id]?.unlockedGroupIds.includes(g.id) && readCards.includes(g.id));
+    if (!confirmed.length) continue;
+    any = true;
+
+    const sec = document.createElement('div');
+    sec.className = 'ref-section';
+
+    let subHTML = '';
+    for (const g of confirmed) {
+      let exHTML = '';
+      for (const ex of g.examples)
+        exHTML += `<div class="ref-ex-row"><span class="ref-ex-from">${ex.from}</span><span class="ref-ex-arr">→</span><span class="ref-ex-to">${ex.to}</span><span class="ref-ex-en">${ex.en}</span></div>`;
+      const plain = g.body.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      subHTML += `<div class="ref-subgroup"><div class="ref-subgroup-title">${g.name}</div><div class="ref-subgroup-body">${plain}</div><div class="ref-examples">${exHTML}</div></div>`;
+    }
+
+    sec.innerHTML = `
+      <div class="ref-section-header" onclick="this.parentElement.classList.toggle('open')">
+        <span class="ref-section-name">${form.name}</span>
+        <span class="ref-section-jp">${form.jpEx}</span>
+        <span class="ref-section-count">${confirmed.length} group${confirmed.length>1?'s':''}</span>
+        <span class="ref-section-toggle">▾</span>
+      </div>
+      <div class="ref-subgroups">${subHTML}</div>`;
+    content.appendChild(sec);
+  }
+
+  document.getElementById('refEmpty').style.display = any ? 'none' : 'block';
+}
+
+// ════════════════════════════════════════════
+// HOME STATS
+// ════════════════════════════════════════════
+function updateHomeStats() {
+  document.getElementById('statTotal').textContent  = stats.total;
+  document.getElementById('statToday').textContent  = stats.today;
+
+  const today = new Date().toDateString();
+  if (stats.lastDate === today && stats.today > 0)
+    document.getElementById('streakCount').textContent = '1 day streak';
+}
+
+// ════════════════════════════════════════════
+// RESET
+// ════════════════════════════════════════════
+function confirmReset() {
+  if (confirm('Reset all progress? This cannot be undone.')) {
+    ['sv-fs','sv-rc','sv-gl','sv-st','sv-ss'].forEach(k => localStorage.removeItem(k));
+    location.reload();
+  }
+}
+
+// ════════════════════════════════════════════
+// LIVE COUNTDOWN REFRESH
+// ════════════════════════════════════════════
+setInterval(() => {
+  const v = document.getElementById('view-practice');
+  if (v.classList.contains('active')) renderPracticeTab();
+}, 60000); // refresh every minute
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+initFirstForm();
+renderPracticeTab();
+updateHomeStats();
+</script>
+</body>
+</html>
