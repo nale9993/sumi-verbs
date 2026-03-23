@@ -157,18 +157,12 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .spinner{width:18px;height:18px;border:2px solid var(--border);border-top-color:var(--amber);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 .loading-text{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--text-dim);letter-spacing:.08em}
 
-/* SENTENCE CARD */
-.sentence-card{display:none;margin:40px 0 20px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:32px 36px;flex-direction:column}
-.sentence-jp{font-family:'Noto Serif JP',serif;font-size:clamp(1.3rem,4vw,1.75rem);line-height:1.9;color:var(--cream);letter-spacing:.05em;margin-bottom:20px}
-.sentence-blank{display:inline-block;min-width:88px;border-bottom:2px solid var(--amber);margin:0 3px;vertical-align:baseline}
-.card-divider{height:1px;background:var(--border);margin-bottom:16px}
-.card-row{display:flex;align-items:baseline;gap:10px;margin-bottom:12px}
-.card-row:last-child{margin-bottom:0}
-.card-label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.22em;text-transform:uppercase;color:var(--text-faint);flex-shrink:0;min-width:36px}
-.card-en-text{font-family:'Playfair Display',serif;font-style:italic;font-size:.98rem;color:var(--text-dim);line-height:1.55}
-.card-en-text em{font-style:normal;color:var(--text-faint);font-size:.88rem}
-.card-verb{font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--text)}
-.card-verb-furi{font-family:'Noto Serif JP',serif;font-size:.82rem;color:var(--text-dim)}
+/* VERB CARD */
+.verb-card{display:none;margin:32px 0 20px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:36px 40px;flex-direction:column;align-items:center;text-align:center;gap:0;animation:fadeUp .18s ease}
+.verb-card-dict{font-family:'Noto Serif JP',serif;font-size:clamp(2rem,7vw,2.8rem);color:var(--cream);letter-spacing:.06em;line-height:1.3}
+.verb-card-furi{font-family:'Noto Serif JP',serif;font-size:.95rem;color:var(--text-dim);margin-top:6px;letter-spacing:.08em}
+.verb-card-divider{width:48px;height:1px;background:var(--border);margin:20px auto}
+.verb-card-cue{font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:var(--text-dim);line-height:1.5;max-width:340px}
 
 /* INPUT */
 .input-area{display:flex;flex-direction:column;gap:10px}
@@ -288,16 +282,11 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
     <div class="drill-progress" id="drillProgress"></div>
   </div>
 
-  <div class="loading-card" id="loadingCard">
-    <div class="spinner"></div>
-    <div class="loading-text">Generating sentence…</div>
-  </div>
-
-  <div class="sentence-card" id="sentenceCard">
-    <div class="sentence-jp" id="sentenceJP"></div>
-    <div class="card-divider"></div>
-    <div class="card-row"><span class="card-label">EN</span><span class="card-en-text" id="cardEn"></span></div>
-    <div class="card-row"><span class="card-label">Verb</span><span class="card-verb" id="cardVerb"></span><span class="card-verb-furi" id="cardFuri"></span></div>
+  <div class="verb-card" id="verbCard">
+    <div class="verb-card-dict" id="vcDict"></div>
+    <div class="verb-card-furi" id="vcFuri"></div>
+    <div class="verb-card-divider"></div>
+    <div class="verb-card-cue"  id="vcCue"></div>
   </div>
 
   <div class="input-area" id="inputArea" style="display:none">
@@ -685,13 +674,19 @@ function startPhase1(formId) {
     D.wrong    = savedSess.wrong;
     D.index    = savedSess.index;
     D.results  = savedSess.results || [];
+    D.questionQueue = savedSess.questionQueue || [];
   }
   savedSess = null; SS('sv-ss', null);
+
+  // Build full session queue if not resumed
+  if (D.questionQueue.length === 0) {
+    D.questionQueue = buildSessionQueue(form, D.total);
+  }
 
   document.getElementById('drillLabel').textContent = form.name;
   document.getElementById('drillSub').textContent   = 'Learning';
   initDrillView(D.total, D.index);
-  fetchSentence();
+  displayQuestion();
 }
 
 function startFinal(formId) {
@@ -701,30 +696,33 @@ function startFinal(formId) {
   D.correct = 0; D.wrong = 0; D.index = 0; D.total = total; D.usedVerbs = []; D.results = []; D.questionQueue = [];
   D.queue = []; D.p2Scores = {};
 
+  D.questionQueue = buildSessionQueue(form, total);
+
   document.getElementById('drillLabel').textContent = form.name;
   document.getElementById('drillSub').textContent   = 'Final Review — ' + total + ' questions';
   initDrillView(D.total, 0);
-  fetchSentence();
+  displayQuestion();
 }
 
 function startPhase2() {
-  const config = buildPhase2Queue();
+  const config = buildPhase2SessionQueue();
   if (!config) return;
 
   D.type = 'phase2'; D.formId = null; D.form = null;
-  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length; D.usedVerbs = []; D.results = []; D.questionQueue = [];
-  D.queue = config.queue; D.p2Scores = {};
+  D.correct = 0; D.wrong = 0; D.index = 0; D.total = config.queue.length; D.usedVerbs = []; D.results = []; D.questionQueue = config.queue;
+  D.queue = []; D.p2Scores = {};
 
   // Init per-form score trackers
   for (const item of config.queue) {
-    if (!D.p2Scores[item.formId]) D.p2Scores[item.formId] = { correct: 0, total: 0 };
-    D.p2Scores[item.formId].total++;
+    const fid = item.p2formId;
+    if (!D.p2Scores[fid]) D.p2Scores[fid] = { correct: 0, total: 0 };
+    D.p2Scores[fid].total++;
   }
 
   document.getElementById('drillLabel').textContent = 'Mixed Review';
   document.getElementById('drillSub').textContent   = config.formsUsed.map(f => f.name).join(' · ');
   initDrillView(D.total, 0);
-  fetchSentence();
+  displayQuestion();
 }
 
 function initDrillView(total, startIndex) {
@@ -745,182 +743,262 @@ function initDrillView(total, startIndex) {
 }
 
 // ════════════════════════════════════════════
-// VERB POOLS (per group, for client-side verb selection)
+// HIRAGANA → ROMAJI (no library needed)
 // ════════════════════════════════════════════
-const VERB_POOLS = {
-  'te-ru':  ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','閉める','借りる','疲れる','続ける','始める','答える'],
-  'te-ku':  ['書く','聞く','歩く','働く','行く','置く','焼く','引く'],
-  'te-gu':  ['泳ぐ','急ぐ','脱ぐ','稼ぐ'],
-  'te-su':  ['話す','貸す','探す','返す','出す','直す','消す'],
-  'te-tsu': ['待つ','持つ','買う','使う','歌う','笑う','会う','思う','払う','帰る','取る','乗る','作る','走る','泊まる'],
-  'te-mu':  ['飲む','読む','住む','休む','遊ぶ','呼ぶ','運ぶ','飛ぶ','頼む','選ぶ','楽しむ'],
-  'te-irr': ['する','くる','勉強する','運動する','料理する','電話する','掃除する','練習する'],
-  'nai-ru': ['食べる','見る','起きる','寝る','教える','覚える','忘れる','出る','開ける','借りる','疲れる','始める'],
-  'nai-u':  ['書く','話す','待つ','買う','飲む','読む','遊ぶ','帰る','取る','使う','思う','走る','急ぐ'],
-  'nai-irr':['する','くる','勉強する','運動する','料理する','掃除する','練習する'],
-  'tai-all':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','旅行する'],
-  'tai-neg':['食べる','飲む','行く','見る','買う','話す','読む','遊ぶ','帰る','起きる','寝る','勉強する','働く'],
+function toRomaji(str) {
+  const T = {
+    'あ':'a','い':'i','う':'u','え':'e','お':'o',
+    'か':'ka','き':'ki','く':'ku','け':'ke','こ':'ko',
+    'が':'ga','ぎ':'gi','ぐ':'gu','げ':'ge','ご':'go',
+    'さ':'sa','し':'shi','す':'su','せ':'se','そ':'so',
+    'ざ':'za','じ':'ji','ず':'zu','ぜ':'ze','ぞ':'zo',
+    'た':'ta','ち':'chi','つ':'tsu','て':'te','と':'to',
+    'だ':'da','づ':'zu','で':'de','ど':'do',
+    'な':'na','に':'ni','ぬ':'nu','ね':'ne','の':'no',
+    'は':'ha','ひ':'hi','ふ':'fu','へ':'he','ほ':'ho',
+    'ば':'ba','び':'bi','ぶ':'bu','べ':'be','ぼ':'bo',
+    'ぱ':'pa','ぴ':'pi','ぷ':'pu','ぺ':'pe','ぽ':'po',
+    'ま':'ma','み':'mi','む':'mu','め':'me','も':'mo',
+    'や':'ya','ゆ':'yu','よ':'yo',
+    'ら':'ra','り':'ri','る':'ru','れ':'re','ろ':'ro',
+    'わ':'wa','を':'wo','ん':'n',
+    'きゃ':'kya','きゅ':'kyu','きょ':'kyo',
+    'しゃ':'sha','しゅ':'shu','しょ':'sho',
+    'ちゃ':'cha','ちゅ':'chu','ちょ':'cho',
+    'にゃ':'nya','にゅ':'nyu','にょ':'nyo',
+    'ひゃ':'hya','ひゅ':'hyu','ひょ':'hyo',
+    'みゃ':'mya','みゅ':'myu','みょ':'myo',
+    'りゃ':'rya','りゅ':'ryu','りょ':'ryo',
+    'ぎゃ':'gya','ぎゅ':'gyu','ぎょ':'gyo',
+    'じゃ':'ja','じゅ':'ju','じょ':'jo',
+    'びゃ':'bya','びゅ':'byu','びょ':'byo',
+    'ぴゃ':'pya','ぴゅ':'pyu','ぴょ':'pyo',
+  };
+  let r = '', i = 0;
+  while (i < str.length) {
+    if (str[i] === 'っ') {
+      const nxt = T[str[i+1]+str[i+2]] || T[str[i+1]] || '';
+      r += nxt[0] || ''; i++; continue;
+    }
+    const two = str[i]+str[i+1];
+    if (T[two]) { r += T[two]; i += 2; }
+    else if (T[str[i]]) { r += T[str[i]]; i++; }
+    else { r += str[i]; i++; }
+  }
+  return r;
+}
+
+// ════════════════════════════════════════════
+// CONJUGATION ENGINE
+// ════════════════════════════════════════════
+// verb.type: 'ichidan' | 'godan' | 'suru' | 'kuru' | 'suru-cpd'
+// For godan, last kana of furi determines the pattern
+
+const A_ROW = {'く':'か','ぐ':'が','す':'さ','つ':'た','う':'わ','る':'ら','ぬ':'な','ぶ':'ば','む':'ま'};
+const I_ROW = {'く':'き','ぐ':'ぎ','す':'し','つ':'ち','う':'い','る':'り','ぬ':'に','ぶ':'び','む':'み'};
+const TE_SFX = {'く':'いて','ぐ':'いで','す':'して','つ':'って','う':'って','る':'って','ぬ':'んで','ぶ':'んで','む':'んで'};
+
+function conjugate(verb, formId) {
+  const f = verb.furi;
+  const end = f.slice(-1);
+  const stem = f.slice(0, -1);
+
+  if (verb.type === 'suru') {
+    if (formId === 'te')      return 'して';
+    if (formId === 'nai')     return 'しない';
+    if (formId === 'tai')     return 'したい';
+    if (formId === 'taineg')  return 'したくない';
+  }
+  if (verb.type === 'kuru') {
+    if (formId === 'te')      return 'きて';
+    if (formId === 'nai')     return 'こない';
+    if (formId === 'tai')     return 'きたい';
+    if (formId === 'taineg')  return 'きたくない';
+  }
+  if (verb.type === 'suru-cpd') {
+    const base = f.slice(0, -2); // drop する
+    if (formId === 'te')      return base + 'して';
+    if (formId === 'nai')     return base + 'しない';
+    if (formId === 'tai')     return base + 'したい';
+    if (formId === 'taineg')  return base + 'したくない';
+  }
+  if (verb.type === 'ichidan') {
+    if (formId === 'te')      return stem + 'て';
+    if (formId === 'nai')     return stem + 'ない';
+    if (formId === 'tai')     return stem + 'たい';
+    if (formId === 'taineg')  return stem + 'たくない';
+  }
+  // godan
+  if (formId === 'te') {
+    if (f === 'いく') return 'いって'; // exception
+    return stem + TE_SFX[end];
+  }
+  if (formId === 'nai')    return stem + A_ROW[end] + 'ない';
+  if (formId === 'tai')    return stem + I_ROW[end] + 'たい';
+  if (formId === 'taineg') return stem + I_ROW[end] + 'たくない';
+  return '?';
+}
+
+// ════════════════════════════════════════════
+// VERB DATABASE (~75 verbs)
+// ════════════════════════════════════════════
+// type: ichidan | godan | suru | kuru | suru-cpd
+const VERBS = [
+  // ── ICHIDAN (る-verbs) ──
+  {dict:'食べる',  furi:'たべる',     type:'ichidan'},
+  {dict:'見る',    furi:'みる',       type:'ichidan'},
+  {dict:'起きる',  furi:'おきる',     type:'ichidan'},
+  {dict:'寝る',    furi:'ねる',       type:'ichidan'},
+  {dict:'着る',    furi:'きる',       type:'ichidan'},
+  {dict:'教える',  furi:'おしえる',   type:'ichidan'},
+  {dict:'覚える',  furi:'おぼえる',   type:'ichidan'},
+  {dict:'忘れる',  furi:'わすれる',   type:'ichidan'},
+  {dict:'出る',    furi:'でる',       type:'ichidan'},
+  {dict:'開ける',  furi:'あける',     type:'ichidan'},
+  {dict:'閉める',  furi:'しめる',     type:'ichidan'},
+  {dict:'借りる',  furi:'かりる',     type:'ichidan'},
+  {dict:'疲れる',  furi:'つかれる',   type:'ichidan'},
+  {dict:'続ける',  furi:'つづける',   type:'ichidan'},
+  {dict:'始める',  furi:'はじめる',   type:'ichidan'},
+  {dict:'答える',  furi:'こたえる',   type:'ichidan'},
+  {dict:'考える',  furi:'かんがえる', type:'ichidan'},
+  {dict:'集める',  furi:'あつめる',   type:'ichidan'},
+  {dict:'調べる',  furi:'しらべる',   type:'ichidan'},
+  {dict:'入れる',  furi:'いれる',     type:'ichidan'},
+  // ── GODAN く ──
+  {dict:'書く',    furi:'かく',       type:'godan'},
+  {dict:'聞く',    furi:'きく',       type:'godan'},
+  {dict:'歩く',    furi:'あるく',     type:'godan'},
+  {dict:'働く',    furi:'はたらく',   type:'godan'},
+  {dict:'行く',    furi:'いく',       type:'godan'},
+  {dict:'置く',    furi:'おく',       type:'godan'},
+  {dict:'焼く',    furi:'やく',       type:'godan'},
+  {dict:'着く',    furi:'つく',       type:'godan'},
+  // ── GODAN ぐ ──
+  {dict:'泳ぐ',    furi:'およぐ',     type:'godan'},
+  {dict:'急ぐ',    furi:'いそぐ',     type:'godan'},
+  {dict:'脱ぐ',    furi:'ぬぐ',       type:'godan'},
+  {dict:'稼ぐ',    furi:'かせぐ',     type:'godan'},
+  // ── GODAN す ──
+  {dict:'話す',    furi:'はなす',     type:'godan'},
+  {dict:'貸す',    furi:'かす',       type:'godan'},
+  {dict:'探す',    furi:'さがす',     type:'godan'},
+  {dict:'返す',    furi:'かえす',     type:'godan'},
+  {dict:'出す',    furi:'だす',       type:'godan'},
+  {dict:'直す',    furi:'なおす',     type:'godan'},
+  {dict:'消す',    furi:'けす',       type:'godan'},
+  {dict:'押す',    furi:'おす',       type:'godan'},
+  // ── GODAN つ ──
+  {dict:'待つ',    furi:'まつ',       type:'godan'},
+  {dict:'持つ',    furi:'もつ',       type:'godan'},
+  {dict:'勝つ',    furi:'かつ',       type:'godan'},
+  {dict:'立つ',    furi:'たつ',       type:'godan'},
+  // ── GODAN う ──
+  {dict:'買う',    furi:'かう',       type:'godan'},
+  {dict:'使う',    furi:'つかう',     type:'godan'},
+  {dict:'習う',    furi:'ならう',     type:'godan'},
+  {dict:'歌う',    furi:'うたう',     type:'godan'},
+  {dict:'笑う',    furi:'わらう',     type:'godan'},
+  {dict:'手伝う',  furi:'てつだう',   type:'godan'},
+  {dict:'会う',    furi:'あう',       type:'godan'},
+  {dict:'払う',    furi:'はらう',     type:'godan'},
+  {dict:'思う',    furi:'おもう',     type:'godan'},
+  {dict:'言う',    furi:'いう',       type:'godan'},
+  // ── GODAN る (godan) ──
+  {dict:'帰る',    furi:'かえる',     type:'godan'},
+  {dict:'取る',    furi:'とる',       type:'godan'},
+  {dict:'乗る',    furi:'のる',       type:'godan'},
+  {dict:'知る',    furi:'しる',       type:'godan'},
+  {dict:'作る',    furi:'つくる',     type:'godan'},
+  {dict:'切る',    furi:'きる',       type:'godan'},
+  {dict:'送る',    furi:'おくる',     type:'godan'},
+  {dict:'走る',    furi:'はしる',     type:'godan'},
+  {dict:'終わる',  furi:'おわる',     type:'godan'},
+  {dict:'泊まる',  furi:'とまる',     type:'godan'},
+  // ── GODAN む ──
+  {dict:'飲む',    furi:'のむ',       type:'godan'},
+  {dict:'読む',    furi:'よむ',       type:'godan'},
+  {dict:'住む',    furi:'すむ',       type:'godan'},
+  {dict:'休む',    furi:'やすむ',     type:'godan'},
+  {dict:'頼む',    furi:'たのむ',     type:'godan'},
+  {dict:'楽しむ',  furi:'たのしむ',   type:'godan'},
+  // ── GODAN ぶ ──
+  {dict:'遊ぶ',    furi:'あそぶ',     type:'godan'},
+  {dict:'呼ぶ',    furi:'よぶ',       type:'godan'},
+  {dict:'運ぶ',    furi:'はこぶ',     type:'godan'},
+  {dict:'選ぶ',    furi:'えらぶ',     type:'godan'},
+  // ── GODAN ぬ ──
+  {dict:'死ぬ',    furi:'しぬ',       type:'godan'},
+  // ── IRREGULAR ──
+  {dict:'する',      furi:'する',         type:'suru'},
+  {dict:'くる',      furi:'くる',         type:'kuru'},
+  {dict:'勉強する',  furi:'べんきょうする', type:'suru-cpd'},
+  {dict:'運動する',  furi:'うんどうする',   type:'suru-cpd'},
+  {dict:'料理する',  furi:'りょうりする',   type:'suru-cpd'},
+  {dict:'電話する',  furi:'でんわする',     type:'suru-cpd'},
+  {dict:'掃除する',  furi:'そうじする',     type:'suru-cpd'},
+  {dict:'練習する',  furi:'れんしゅうする', type:'suru-cpd'},
+];
+
+// Which VERBS belong to which subgroup (for Stage 1 question selection)
+function getVerbsForGroup(groupId) {
+  switch(groupId) {
+    case 'te-ru':  case 'nai-ru': return VERBS.filter(v => v.type === 'ichidan');
+    case 'te-ku':  return VERBS.filter(v => v.type === 'godan' && v.furi.endsWith('く'));
+    case 'te-gu':  return VERBS.filter(v => v.type === 'godan' && v.furi.endsWith('ぐ'));
+    case 'te-su':  return VERBS.filter(v => v.type === 'godan' && v.furi.endsWith('す'));
+    case 'te-tsu': return VERBS.filter(v => v.type === 'godan' && ['つ','う','る'].includes(v.furi.slice(-1)));
+    case 'te-mu':  return VERBS.filter(v => v.type === 'godan' && ['ぬ','ぶ','む'].includes(v.furi.slice(-1)));
+    case 'te-irr': case 'nai-irr': return VERBS.filter(v => ['suru','kuru','suru-cpd'].includes(v.type));
+    case 'nai-u':  return VERBS.filter(v => v.type === 'godan');
+    case 'tai-all': case 'tai-neg': return VERBS;
+    default: return VERBS;
+  }
+}
+
+// Which internal formId to pass to conjugate() for a given subgroup
+function formIdForGroup(groupId) {
+  if (groupId.startsWith('te'))  return 'te';
+  if (groupId === 'nai-ru' || groupId === 'nai-u' || groupId === 'nai-irr') return 'nai';
+  if (groupId === 'tai-all') return 'tai';
+  if (groupId === 'tai-neg') return 'taineg';
+  return 'te';
+}
+
+// Stage 1: show the form name explicitly
+const GROUP_LABEL = {
+  'te-ru':  'て-form',  'te-ku':  'て-form',  'te-gu': 'て-form',
+  'te-su':  'て-form',  'te-tsu': 'て-form',  'te-mu': 'て-form', 'te-irr': 'て-form',
+  'nai-ru': 'ない-form','nai-u':  'ない-form','nai-irr':'ない-form',
+  'tai-all':'たい-form','tai-neg':'たくない-form',
 };
 
-function pickVerb(groupId) {
-  const pool = VERB_POOLS[groupId] || VERB_POOLS['te-ru'];
-  const unused = pool.filter(v => !D.usedVerbs.includes(v));
-  const src = unused.length ? unused : pool;
-  return src[Math.floor(Math.random() * src.length)];
-}
-
-// ════════════════════════════════════════════
-// QUESTION GENERATION (batch at session start)
-// ════════════════════════════════════════════
-const CONJ_RULES = {
-  'te-ru':  'て-form of a る-verb: drop る, add て. E.g. 食べる→食べて',
-  'te-ku':  'て-form of a く-ending う-verb: く→いて. Exception: 行く→行って',
-  'te-gu':  'て-form of a ぐ-ending う-verb: ぐ→いで. E.g. 泳ぐ→泳いで',
-  'te-su':  'て-form of a す-ending う-verb: す→して. E.g. 話す→話して',
-  'te-tsu': 'て-form of a つ/う/る(godan) う-verb: →って. E.g. 待つ→待って, 買う→買って, 帰る→帰って',
-  'te-mu':  'て-form of a ぬ/ぶ/む う-verb: →んで. E.g. 飲む→飲んで, 遊ぶ→遊んで',
-  'te-irr': 'て-form of する or くる: する→して, くる→きて',
-  'nai-ru': 'ない-form of a る-verb: drop る, add ない. E.g. 食べる→食べない',
-  'nai-u':  'ない-form of a う-verb: shift to あ-row + ない. う-ending →わない. E.g. 書く→書かない, 買う→買わない',
-  'nai-irr':'ない-form of する or くる: する→しない, くる→こない',
-  'tai-all':'たい form (want to ~): ます-stem + たい. E.g. 食べる→食べたい, 飲む→飲みたい',
-  'tai-neg':'たくない form (don\'t want to ~): ます-stem + たくない. E.g. 食べる→食べたくない',
+// Stage 2: context hint (no form name)
+const FORM_HINT = {
+  'te':     'Conjugate to connect two actions',
+  'nai':    'Conjugate to say you don\'t or won\'t do this',
+  'tai':    'Conjugate to say you want to do this',
+  'taineg': 'Conjugate to say you don\'t want to do this',
 };
 
-function buildQuestionSpecs(form, count) {
-  // Build list of {groupId, verb, rule} specs for all questions in the session
-  const st = getState(form.id);
-  const groups = st ? form.groups.filter(g => st.unlockedGroupIds.includes(g.id)) : [form.groups[0]];
-  const specs = [];
-  const usedVerbs = new Set();
-
-  for (let i = 0; i < count; i++) {
-    // 50% weight to newest group
-    let group;
-    if (groups.length > 1 && Math.random() < 0.5) {
-      group = groups[groups.length - 1];
-    } else {
-      group = groups[Math.floor(Math.random() * groups.length)];
-    }
-    const pool   = VERB_POOLS[group.id] || VERB_POOLS['te-ru'];
-    const unused = pool.filter(v => !usedVerbs.has(v));
-    const verb   = (unused.length ? unused : pool)[Math.floor(Math.random() * (unused.length || pool.length))];
-    usedVerbs.add(verb);
-    specs.push({ groupId: group.id, verb, rule: CONJ_RULES[group.id] });
-  }
-  return specs;
-}
-
-async function generateQuestions(form, count) {
-  const specs = buildQuestionSpecs(form, count);
-
-  const specList = specs.map((s, i) =>
-    `${i+1}. Verb: ${s.verb} | Rule: ${s.rule}`
-  ).join('\n');
-
-  const prompt = `Generate ${count} Japanese conjugation drill sentences. Each uses a different verb and scene.
-
-For each drill:
-${specList}
-
-Return a JSON array of ${count} objects. Each object must have:
-- sentenceParts: [text before blank, text after blank]
-- englishSentence: natural English translation
-- nuanceHint: "" (empty unless passive/causative/conditional)
-- answer: conjugated verb in kana/kanji
-- answerKana: conjugated verb in pure hiragana
-- answerRomaji: conjugated verb in hepburn romaji, lowercase, no spaces
-- verbDictionary: dictionary form
-- verbFurigana: (hiragana reading)
-
-Use varied, realistic scenes — daily life, work, school, weather, food, travel, emotions. No two sentences should have the same setting or structure.`;
-
-  for (let attempt = 0; attempt < 2; attempt++) {
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 4096,
-          system: `You are a Japanese conjugation drill generator. The user gives you a numbered list of verbs and conjugation rules. You MUST conjugate each verb using exactly its specified rule — never substitute a different form. Return only a valid JSON array, no markdown.`,
-          messages: [{ role: 'user', content: prompt }]
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok) { console.error('API error:', data); throw new Error(`API ${res.status}`); }
-
-      const raw = data.content.map(b => b.text || '').join('');
-      console.log('Batch raw:', raw);
-
-      // Parse: try direct, then extract array
-      let items;
-      try { items = JSON.parse(raw); } catch {
-        const m = raw.match(/\[[\s\S]*\]/);
-        if (!m) throw new Error('No JSON array found');
-        items = JSON.parse(m[0]);
-      }
-
-      if (!Array.isArray(items) || items.length === 0) throw new Error('Empty array');
-      return items;
-
-    } catch(e) {
-      console.error(`Batch attempt ${attempt+1} failed:`, e);
-      if (attempt < 1) await new Promise(r => setTimeout(r, 1000));
-    }
-  }
-  return null; // both attempts failed
-}
-
 // ════════════════════════════════════════════
-// FETCH SENTENCE (now just serves from pre-generated queue)
+// DISPLAY QUESTION (replaces fetchSentence — no AI)
 // ════════════════════════════════════════════
-async function fetchSentence() {
-  const lc = document.getElementById('loadingCard');
-  const sc = document.getElementById('sentenceCard');
+function displayQuestion() {
+  const item = D.questionQueue[D.index];
+  if (!item) return;
+
+  D.answer       = item.kana;
+  D.answerKana   = item.kana;
+  D.answerRomaji = toRomaji(item.kana);
+
+  document.getElementById('vcDict').textContent = item.verb.dict;
+  document.getElementById('vcFuri').textContent = item.verb.furi;
+  document.getElementById('vcCue').textContent  = item.cue;
+
+  const vc = document.getElementById('verbCard');
   const ia = document.getElementById('inputArea');
-
-  // If queue is empty, show loading and generate batch
-  if (D.questionQueue.length === 0) {
-    lc.classList.add('visible');
-    sc.style.display = 'none';
-    ia.style.display = 'none';
-
-    let form = D.type === 'phase2' ? D.queue[D.index]?.form : D.form;
-    const remaining = D.total - D.index;
-    const items = await generateQuestions(form, remaining);
-
-    if (items) {
-      D.questionQueue = items;
-    } else {
-      // Fallback pool if generation completely failed
-      D.questionQueue = [
-        { sentenceParts:['毎朝、コーヒーを','。'],    englishSentence:'I drink coffee every morning.',        nuanceHint:'', answer:'飲んで',   answerKana:'のんで',   answerRomaji:'nonde',   verbDictionary:'飲む',   verbFurigana:'(のむ)'   },
-        { sentenceParts:['ドアを','ください。'],       englishSentence:'Please open the door.',               nuanceHint:'', answer:'開けて',   answerKana:'あけて',   answerRomaji:'akete',   verbDictionary:'開ける', verbFurigana:'(あける)' },
-        { sentenceParts:['手紙を','います。'],         englishSentence:'I am writing a letter.',              nuanceHint:'', answer:'書いて',   answerKana:'かいて',   answerRomaji:'kaite',   verbDictionary:'書く',   verbFurigana:'(かく)'   },
-        { sentenceParts:['今日は学校に','。'],         englishSentence:'I am not going to school today.',     nuanceHint:'', answer:'行かない', answerKana:'いかない', answerRomaji:'ikanai',  verbDictionary:'行く',   verbFurigana:'(いく)'   },
-        { sentenceParts:['友達と公園で','。'],         englishSentence:'I played at the park with a friend.', nuanceHint:'', answer:'遊んで',   answerKana:'あそんで', answerRomaji:'asonde',  verbDictionary:'遊ぶ',   verbFurigana:'(あそぶ)' },
-        { sentenceParts:['宿題を','から寝る。'],       englishSentence:'I will sleep after doing my homework.',nuanceHint:'', answer:'して',    answerKana:'して',     answerRomaji:'shite',   verbDictionary:'する',   verbFurigana:'(する)'   },
-        { sentenceParts:['今日は魚を','たくない。'],   englishSentence:"I don't want to eat fish today.",     nuanceHint:'', answer:'食べ',    answerKana:'たべたくない', answerRomaji:'tabetakunai', verbDictionary:'食べる', verbFurigana:'(たべる)' },
-        { sentenceParts:['バスを','います。'],         englishSentence:'I am waiting for the bus.',           nuanceHint:'', answer:'待って',   answerKana:'まって',   answerRomaji:'matte',   verbDictionary:'待つ',   verbFurigana:'(まつ)'   },
-        { sentenceParts:['音楽を','ながら走る。'],     englishSentence:'I run while listening to music.',     nuanceHint:'', answer:'聞いて',   answerKana:'きいて',   answerRomaji:'kiite',   verbDictionary:'聞く',   verbFurigana:'(きく)'   },
-        { sentenceParts:['その映画は','たい。'],       englishSentence:'I want to see that movie.',           nuanceHint:'', answer:'見',       answerKana:'みたい',   answerRomaji:'mitai',   verbDictionary:'見る',   verbFurigana:'(みる)'   },
-      ];
-    }
-
-    lc.classList.remove('visible');
-  }
-
-  // Serve next question from queue
-  const item = D.questionQueue.shift();
-
-  D.answer       = item.answer;
-  D.answerKana   = item.answerKana  || item.answer;
-  D.answerRomaji = (item.answerRomaji || '').toLowerCase().replace(/[^a-z]/g, '');
-
-  renderCard(item);
-  sc.style.display = 'flex';
+  vc.style.display = 'flex';
   ia.style.display = 'flex';
 
   const inp = document.getElementById('answerInput');
@@ -932,14 +1010,59 @@ async function fetchSentence() {
   inp.onkeydown = e => { if (e.key === 'Enter') checkAnswer(); };
 }
 
-function renderCard(item) {
-  document.getElementById('sentenceJP').innerHTML =
-    item.sentenceParts[0] + '<span class="sentence-blank">　　　　</span>' + item.sentenceParts[1];
-  const hint = item.nuanceHint ? ` <em>(${item.nuanceHint})</em>` : '';
-  document.getElementById('cardEn').innerHTML   = item.englishSentence + hint;
-  document.getElementById('cardVerb').textContent = item.verbDictionary;
-  document.getElementById('cardFuri').textContent = item.verbFurigana;
+// Build question queue for a phase1/final session
+function buildSessionQueue(form, count) {
+  const st = getState(form.id);
+  const groups = st ? form.groups.filter(g => st.unlockedGroupIds.includes(g.id)) : [form.groups[0]];
+  const used = new Set();
+  const queue = [];
+
+  for (let i = 0; i < count; i++) {
+    // 50% weight to newest group
+    const group = (groups.length > 1 && Math.random() < 0.5)
+      ? groups[groups.length - 1]
+      : groups[Math.floor(Math.random() * groups.length)];
+
+    const pool   = getVerbsForGroup(group.id);
+    const unused = pool.filter(v => !used.has(v.furi));
+    const verb   = (unused.length ? unused : pool)[Math.floor(Math.random() * (unused.length || pool.length))];
+    used.add(verb.furi);
+
+    const conj = formIdForGroup(group.id);
+    const kana = conjugate(verb, conj);
+    const cue  = GROUP_LABEL[group.id] || 'Conjugate';
+    queue.push({ verb, kana, cue });
+  }
+  return queue;
 }
+
+// Build queue for phase2 session (context hints, mixed forms)
+function buildPhase2SessionQueue() {
+  const config = buildPhase2Queue(); // existing logic for which forms/how many questions
+  if (!config) return null;
+
+  const used = new Set();
+  const queue = [];
+
+  for (const qi of config.queue) {
+    const f   = qi.form;
+    const st  = getState(f.id);
+    const grp = st ? f.groups.filter(g => st.unlockedGroupIds.includes(g.id)) : [f.groups[0]];
+    const group = grp[Math.floor(Math.random() * grp.length)];
+    const conj  = formIdForGroup(group.id);
+
+    const pool   = getVerbsForGroup(group.id);
+    const unused = pool.filter(v => !used.has(v.furi));
+    const verb   = (unused.length ? unused : pool)[Math.floor(Math.random() * (unused.length || pool.length))];
+    used.add(verb.furi);
+
+    const kana = conjugate(verb, conj);
+    const cue  = FORM_HINT[conj] || 'Conjugate';
+    queue.push({ verb, kana, cue, formId: f.id, p2formId: qi.form.id });
+  }
+  return { queue, formsUsed: config.formsUsed };
+}
+
 
 // ════════════════════════════════════════════
 // CHECK / NEXT
@@ -971,7 +1094,10 @@ function checkAnswer() {
     inp.classList.add('correct');
     fb.className = 'feedback correct'; fb.textContent = '✓ Correct!';
     D.correct++;
-    if (D.type === 'phase2') D.p2Scores[D.queue[ci].formId].correct++;
+    if (D.type === 'phase2') {
+      const fid = D.questionQueue[ci]?.p2formId;
+      if (fid && D.p2Scores[fid]) D.p2Scores[fid].correct++;
+    }
   } else {
     inp.classList.add('wrong');
     fb.className = 'feedback wrong';
@@ -997,7 +1123,7 @@ function nextQuestion() {
     endSession();
     return;
   }
-  fetchSentence();
+  displayQuestion();
 }
 
 function endSession() {
@@ -1032,7 +1158,7 @@ function showDrillView() {
 
 function exitDrill() {
   if (D.type === 'phase1' || D.type === 'final') {
-    savedSess = { type: D.type, formId: D.formId, correct: D.correct, wrong: D.wrong, index: D.index, results: D.results };
+    savedSess = { type: D.type, formId: D.formId, correct: D.correct, wrong: D.wrong, index: D.index, results: D.results, questionQueue: D.questionQueue.slice(D.index) };
     SS('sv-ss', savedSess);
   }
   document.getElementById('mainTabBar').style.display = '';
