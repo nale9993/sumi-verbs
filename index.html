@@ -147,7 +147,7 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .drill-meta{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--text);letter-spacing:.1em}
 .drill-sub{font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--text-dim);letter-spacing:.08em}
 .drill-progress{display:flex;gap:2px;align-items:center;max-width:260px;flex:1;padding:0 12px}
-.progress-pip{flex:1;min-width:6px;max-width:22px;height:3px;border-radius:2px;background:var(--bg3);transition:background .3s}
+.progress-pip{flex:1;min-width:4px;max-width:14px;height:2px;border-radius:2px;background:var(--bg3);transition:background .3s}
 .progress-pip.correct{background:var(--green)}
 .progress-pip.wrong{background:var(--red)}
 .btn-back{background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.1em;padding:6px 12px;border-radius:3px;cursor:pointer;transition:border-color .15s,color .15s}
@@ -167,23 +167,33 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
 /* INPUT */
 .input-area{display:flex;flex-direction:column;gap:10px}
-.romaji-preview{min-height:36px;font-family:'Noto Serif JP',serif;font-size:1.4rem;color:var(--amber);letter-spacing:.08em;padding:4px 0;transition:opacity .1s;opacity:0;text-align:center}
+.preview-row{min-height:44px;display:flex;align-items:center;justify-content:center}
+.romaji-preview{font-family:'Noto Serif JP',serif;font-size:1.4rem;color:var(--amber);letter-spacing:.08em;transition:opacity .1s;opacity:0;text-align:center}
 .romaji-preview.visible{opacity:1}
+.correct-answer{display:none;text-align:center;animation:fadeUp .2s ease}
+.correct-answer.visible{display:block}
+.correct-answer-kana{font-family:'Noto Serif JP',serif;font-size:1.5rem;color:#e07070;letter-spacing:.06em}
 .answer-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:14px 16px;color:var(--cream);font-family:'Noto Serif JP',serif;font-size:1.2rem;outline:none;transition:border-color .15s;letter-spacing:.05em;text-align:center}
 .answer-input:focus{border-color:var(--amber-dim)}
 .answer-input.correct{border-color:var(--green);background:rgba(74,140,92,.08)}
 .answer-input.wrong{border-color:var(--red);background:rgba(184,64,64,.08)}
 .submit-btn{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.12em;padding:13px 0;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
 .submit-btn:hover{background:var(--amber);border-color:var(--amber);color:#0e0c0a}
+.submit-btn.btn-next{background:var(--bg3);border-color:var(--border);color:var(--amber)}
+.submit-btn.btn-next:hover{background:var(--amber);border-color:var(--amber);color:#0e0c0a}
 .feedback{display:none}
-.correct-answer{display:none;padding:16px 18px;background:rgba(184,64,64,.06);border:1px solid var(--red);border-radius:5px;text-align:center;animation:fadeUp .2s ease}
-.correct-answer.visible{display:block}
-.correct-answer-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:#d06060;margin-bottom:8px}
-.correct-answer-kana{font-family:'Noto Serif JP',serif;font-size:1.6rem;color:var(--cream);letter-spacing:.06em}
-.next-btn{display:none;width:100%;text-align:center;background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;padding:11px 0;border-radius:4px;cursor:pointer;transition:border-color .15s,color .15s}
-.next-btn.visible{display:block}
-.next-btn:hover{border-color:var(--amber);color:var(--amber)}
-.drill-stats-bar{display:flex;gap:28px;padding:20px 0;border-top:1px solid var(--border);margin-top:auto;justify-content:center}
+.drill-stats-bar{display:flex;padding:20px 0;border-top:1px solid var(--border);margin-top:auto;justify-content:center}
+
+/* RESULTS */
+.results-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:48px 0;gap:16px;text-align:center}
+.results-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim)}
+.results-score{font-family:'Playfair Display',serif;font-size:clamp(3.5rem,16vw,5.5rem);color:var(--cream);line-height:1;margin:8px 0}
+.results-pct{font-family:'IBM Plex Mono',monospace;font-size:1.1rem;color:var(--amber);letter-spacing:.08em}
+.results-verdict{font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;margin-top:8px;padding:14px 28px;border-radius:6px;border:1px solid}
+.results-verdict.pass{color:var(--green);border-color:rgba(74,140,92,.35);background:rgba(74,140,92,.06)}
+.results-verdict.fail{color:#d06060;border-color:rgba(184,64,64,.3);background:rgba(184,64,64,.05)}
+.results-btn{margin-top:16px;background:var(--amber);border:none;color:#0e0c0a;font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.15em;text-transform:uppercase;padding:13px 40px;border-radius:4px;cursor:pointer;font-weight:500;transition:opacity .15s}
+.results-btn:hover{opacity:.85}
 
 /* RESET */
 .reset-row{text-align:center;padding:16px 0 32px}
@@ -211,7 +221,6 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
 <header>
   <span class="logo">墨 Sumi</span><span class="logo-sep"></span>
-  <span class="logo-jp">動詞</span><span class="logo-sep"></span>
   <span class="logo-sub">Verb Forms</span>
   <div class="header-right">
     <div class="streak"><span id="streakCount">0 day streak</span></div>
@@ -262,6 +271,9 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     <div class="stat"><div class="stat-val" id="statTotal">0</div><div class="stat-label">Total Drills</div></div>
     <div class="stat"><div class="stat-val" id="statToday">0</div><div class="stat-label">Today</div></div>
   </div>
+  <div class="reset-row">
+    <button class="reset-btn" onclick="confirmReset()">Reset all progress</button>
+  </div>
 </div>
 
 <!-- ══ REFERENCE ══ -->
@@ -293,21 +305,30 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   </div>
 
   <div class="input-area" id="inputArea" style="display:none">
-    <div class="romaji-preview" id="romajiPreview"></div>
-    <input class="answer-input" id="answerInput" type="text" placeholder="答えを入力…" autocomplete="off" autocorrect="off" spellcheck="false"/>
-    <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">Check</button>
-    <div class="correct-answer" id="correctAnswer">
-      <div class="correct-answer-label">Correct answer</div>
-      <div class="correct-answer-kana" id="correctAnswerKana"></div>
+    <div class="preview-row" id="previewRow">
+      <div class="romaji-preview" id="romajiPreview"></div>
+      <div class="correct-answer" id="correctAnswer">
+        <div class="correct-answer-kana" id="correctAnswerKana"></div>
+      </div>
     </div>
+    <input class="answer-input" id="answerInput" type="text" placeholder="答えを入力…" autocomplete="off" autocorrect="off" spellcheck="false"/>
+    <button class="submit-btn" id="submitBtn" onclick="handleActionBtn()">Check</button>
     <div class="feedback" id="feedback"></div>
-    <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
   </div>
 
   <div class="drill-stats-bar">
     <div class="stat"><div class="stat-val" id="drillRemaining">10</div><div class="stat-label">Remaining</div></div>
-    <div class="stat"><div class="stat-val" id="drillCorrect">0</div><div class="stat-label">Correct</div></div>
-    <div class="stat"><div class="stat-val" id="drillWrong">0</div><div class="stat-label">Wrong</div></div>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div class="view" id="view-results">
+  <div class="results-screen">
+    <div class="results-eyebrow" id="resultsEyebrow">Session Complete</div>
+    <div class="results-score" id="resultsScore"></div>
+    <div class="results-pct" id="resultsPct"></div>
+    <div class="results-verdict" id="resultsVerdict"></div>
+    <button class="results-btn" onclick="exitResults()">Done</button>
   </div>
 </div>
 
@@ -321,10 +342,6 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer"><button class="got-it-btn" id="gotItBtn" onclick="confirmCard()">Got it ✓</button></div>
   </div>
-</div>
-
-<div class="reset-row">
-  <button class="reset-btn" onclick="confirmReset()">Reset all progress</button>
 </div>
 
 </div><!-- /app -->
@@ -802,8 +819,6 @@ function initDrillView(total, startIndex) {
     pc.appendChild(pip);
   }
 
-  document.getElementById('drillCorrect').textContent   = D.correct;
-  document.getElementById('drillWrong').textContent     = D.wrong;
   document.getElementById('drillRemaining').textContent = D.total - D.index;
   showDrillView();
 }
@@ -1191,8 +1206,8 @@ function displayQuestion() {
   inp.value = ''; inp.className = 'answer-input'; inp.focus();
   document.getElementById('feedback').className = 'feedback';
   document.getElementById('correctAnswer').className = 'correct-answer';
-  document.getElementById('nextBtn').className  = 'next-btn';
-  document.getElementById('submitBtn').disabled = false;
+  const btn = document.getElementById('submitBtn');
+  btn.textContent = 'Check'; btn.classList.remove('btn-next');
   const preview = document.getElementById('romajiPreview');
   preview.textContent = ''; preview.className = 'romaji-preview';
   D.answered = false;
@@ -1264,17 +1279,21 @@ function buildPhase2SessionQueue() {
 // ════════════════════════════════════════════
 // CHECK / NEXT
 // ════════════════════════════════════════════
+function handleActionBtn() {
+  if (!D.answered) checkAnswer();
+  else nextQuestion();
+}
+
 function checkAnswer() {
-  if (D.answered) return;
   const inp    = document.getElementById('answerInput');
-  const nb     = document.getElementById('nextBtn');
+  const btn    = document.getElementById('submitBtn');
   const ca     = document.getElementById('correctAnswer');
   const caKana = document.getElementById('correctAnswerKana');
+  const prev   = document.getElementById('romajiPreview');
   const rawAns = inp.value.trim();
   if (!rawAns) return;
 
   D.answered = true;
-  document.getElementById('submitBtn').disabled = true;
 
   const ci = D.index;
   const normalizedInput = rawAns.toLowerCase().replace(/[^a-z\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]/g, '');
@@ -1294,6 +1313,8 @@ function checkAnswer() {
     }
   } else {
     inp.classList.add('wrong');
+    // Show correct answer in place of romaji preview
+    prev.className = 'romaji-preview';
     caKana.textContent = D.answer;
     ca.className = 'correct-answer visible';
     D.wrong++;
@@ -1304,13 +1325,13 @@ function checkAnswer() {
   const pips = document.querySelectorAll('.progress-pip');
   if (pips[ci]) pips[ci].classList.add(correct ? 'correct' : 'wrong');
 
-  document.getElementById('drillCorrect').textContent   = D.correct;
-  document.getElementById('drillWrong').textContent     = D.wrong;
   document.getElementById('drillRemaining').textContent = D.total - D.index;
 
-  nb.className = 'next-btn visible';
-  inp.oninput  = null;
-  inp.onkeydown = e => { if (e.key === 'Enter') nextQuestion(); };
+  // Morph Check → Next
+  btn.textContent = D.index >= D.total ? 'Finish →' : 'Next →';
+  btn.classList.add('btn-next');
+  inp.oninput   = null;
+  inp.onkeydown = e => { if (e.key === 'Enter') handleActionBtn(); };
 }
 
 function nextQuestion() {
@@ -1322,11 +1343,50 @@ function nextQuestion() {
 }
 
 function endSession() {
+  // Compute result data before state mutation
+  const resultData = {
+    correct: D.correct,
+    total:   D.total,
+    type:    D.type,
+    formId:  D.formId,
+  };
+
   if (D.type === 'phase1')      handlePhase1Complete(D.formId, D.correct);
   else if (D.type === 'final')  handleFinalComplete(D.formId, D.correct, D.total);
   else if (D.type === 'phase2') handlePhase2Complete(D.p2Scores);
 
   SS('sv-ss', null);
+  showResults(resultData);
+}
+
+function showResults(data) {
+  const pct     = Math.round((data.correct / data.total) * 100);
+  const passed  = pct >= 85;
+
+  document.getElementById('resultsEyebrow').textContent = 'Session Complete';
+  document.getElementById('resultsScore').textContent   = `${data.correct}/${data.total}`;
+  document.getElementById('resultsPct').textContent     = `${pct}%`;
+
+  const verdict = document.getElementById('resultsVerdict');
+  if (data.type === 'phase1') {
+    verdict.textContent = pct >= 90 ? 'Great work — keep drilling to unlock the next group.' : 'Keep going — one more pass unlocks the next group.';
+    verdict.className = 'results-verdict ' + (pct >= 90 ? 'pass' : 'fail');
+  } else if (data.type === 'final') {
+    verdict.textContent = passed ? '★ Moved to SRS — next form unlocked!' : 'Not quite — review again and try the final when ready.';
+    verdict.className = 'results-verdict ' + (passed ? 'pass' : 'fail');
+  } else {
+    verdict.textContent = passed ? 'SRS level up — great retention!' : 'SRS level held — keep reviewing.';
+    verdict.className = 'results-verdict ' + (passed ? 'pass' : 'fail');
+  }
+
+  ['view-practice','view-reference','view-drill'].forEach(id =>
+    document.getElementById(id).classList.remove('active'));
+  document.getElementById('view-results').classList.add('active');
+  document.getElementById('mainTabBar').style.display = 'none';
+}
+
+function exitResults() {
+  document.getElementById('view-results').classList.remove('active');
   document.getElementById('mainTabBar').style.display = '';
   switchTab('practice');
   updateHomeStats();
@@ -1341,6 +1401,7 @@ function switchTab(tab) {
   document.getElementById('view-practice').classList.toggle('active', tab==='practice');
   document.getElementById('view-reference').classList.toggle('active', tab==='reference');
   document.getElementById('view-drill').classList.remove('active');
+  document.getElementById('view-results').classList.remove('active');
   if (tab === 'practice')  renderPracticeTab();
   if (tab === 'reference') renderReference();
 }
