@@ -108,9 +108,8 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .badge-final{background:rgba(201,138,58,.2);color:var(--amber);border:1px solid var(--amber)}
 .badge-cooldown{background:transparent;color:var(--text-faint);border:1px solid var(--text-faint)}
 .badge-unread{background:rgba(201,138,58,.15);color:var(--amber);border:1px solid var(--amber-dim)}
-.form-card-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);margin-bottom:4px}
-.form-card-jp{font-family:'Noto Serif JP',serif;font-size:.73rem;color:var(--text-dim);margin-bottom:6px}
-.form-card-status{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.04em;margin-top:4px}
+.form-card-name{font-family:'Playfair Display',serif;font-size:1.2rem;color:var(--cream);margin-bottom:8px}
+.form-card-status{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--text-dim);letter-spacing:.04em}
 .form-card-status.s-ready{color:var(--green)}
 .form-card-status.s-final{color:var(--amber)}
 .form-card-status.s-unread{color:var(--amber)}
@@ -125,12 +124,12 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .ref-section-header{padding:16px 22px;background:var(--bg2);display:flex;align-items:baseline;gap:12px;cursor:pointer;user-select:none;transition:background .15s;border-bottom:1px solid var(--border)}
 .ref-section-header:hover{background:var(--bg3)}
 .ref-section-name{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--cream)}
-.ref-section-jp{font-family:'Noto Serif JP',serif;font-size:.78rem;color:var(--text-dim)}
 .ref-section-count{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--text-faint);margin-right:10px}
 .ref-section-toggle{font-family:'IBM Plex Mono',monospace;font-size:.65rem;color:var(--text-faint);transition:transform .2s;display:inline-block}
 .ref-section.open .ref-section-toggle{transform:rotate(180deg)}
 .ref-subgroups{display:none}
 .ref-section.open .ref-subgroups{display:block}
+.ref-usage{padding:18px 22px 14px;font-size:.85rem;color:var(--text);line-height:1.75;border-bottom:1px solid var(--border);font-style:italic}
 .ref-subgroup{padding:20px 22px;border-bottom:1px solid var(--border)}
 .ref-subgroup:last-child{border-bottom:none}
 .ref-subgroup-title{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);letter-spacing:.01em;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
@@ -176,14 +175,15 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .answer-input.wrong{border-color:var(--red);background:rgba(184,64,64,.08)}
 .submit-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;padding:0 18px;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
 .submit-btn:hover{background:var(--amber);border-color:var(--amber);color:#0e0c0a}
-.feedback{display:none;padding:13px 16px;border-radius:5px;font-family:'IBM Plex Mono',monospace;font-size:.75rem;letter-spacing:.04em;animation:fadeUp .2s ease}
-.feedback.correct{display:block;background:rgba(74,140,92,.1);border:1px solid var(--green);color:var(--green)}
-.feedback.wrong{display:block;background:rgba(184,64,64,.08);border:1px solid var(--red);color:#d06060}
-.feedback-answer{margin-top:6px;font-family:'Noto Serif JP',serif;font-size:1rem;color:var(--cream)}
+.feedback{display:none}
+.correct-answer{display:none;margin-top:4px;padding:14px 18px;background:rgba(184,64,64,.06);border:1px solid var(--red);border-radius:5px;animation:fadeUp .2s ease}
+.correct-answer.visible{display:block}
+.correct-answer-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:#d06060;margin-bottom:8px}
+.correct-answer-kana{font-family:'Noto Serif JP',serif;font-size:1.6rem;color:var(--cream);letter-spacing:.06em}
 .next-btn{display:none;align-self:flex-end;background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;padding:8px 18px;border-radius:4px;cursor:pointer;transition:border-color .15s,color .15s}
 .next-btn.visible{display:block}
 .next-btn:hover{border-color:var(--amber);color:var(--amber)}
-.romaji-preview{min-height:22px;font-family:'Noto Serif JP',serif;font-size:.88rem;color:var(--amber);letter-spacing:.06em;padding:2px 4px;transition:opacity .1s;opacity:0}
+.romaji-preview{min-height:32px;font-family:'Noto Serif JP',serif;font-size:1.4rem;color:var(--amber);letter-spacing:.08em;padding:4px 0;transition:opacity .1s;opacity:0;text-align:center}
 .romaji-preview.visible{opacity:1}
 .drill-stats-bar{display:flex;gap:28px;padding:20px 0;border-top:1px solid var(--border);margin-top:auto}
 
@@ -301,6 +301,10 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
       <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">Check</button>
     </div>
     <div class="romaji-preview" id="romajiPreview"></div>
+    <div class="correct-answer" id="correctAnswer">
+      <div class="correct-answer-label">Correct answer</div>
+      <div class="correct-answer-kana" id="correctAnswerKana"></div>
+    </div>
     <div class="feedback" id="feedback"></div>
     <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next →</button>
   </div>
@@ -1191,6 +1195,7 @@ function displayQuestion() {
   const inp = document.getElementById('answerInput');
   inp.value = ''; inp.className = 'answer-input'; inp.focus();
   document.getElementById('feedback').className = 'feedback';
+  document.getElementById('correctAnswer').className = 'correct-answer';
   document.getElementById('nextBtn').className  = 'next-btn';
   document.getElementById('submitBtn').disabled = false;
   const preview = document.getElementById('romajiPreview');
@@ -1265,10 +1270,11 @@ function buildPhase2SessionQueue() {
 // CHECK / NEXT
 // ════════════════════════════════════════════
 function checkAnswer() {
-  if (D.answered) return;  // prevent double-press
+  if (D.answered) return;
   const inp    = document.getElementById('answerInput');
-  const fb     = document.getElementById('feedback');
   const nb     = document.getElementById('nextBtn');
+  const ca     = document.getElementById('correctAnswer');
+  const caKana = document.getElementById('correctAnswerKana');
   const rawAns = inp.value.trim();
   if (!rawAns) return;
 
@@ -1276,11 +1282,7 @@ function checkAnswer() {
   document.getElementById('submitBtn').disabled = true;
 
   const ci = D.index;
-
-  // Normalize user input: lowercase, strip everything except letters and Japanese kana/kanji
   const normalizedInput = rawAns.toLowerCase().replace(/[^a-z\u3040-\u309f\u30a0-\u30ff\u4e00-\u9fff]/g, '');
-
-  console.log({ rawAns, normalizedInput, answerRomaji: D.answerRomaji, answerKana: D.answerKana, answer: D.answer });
 
   const correct =
     (D.answerRomaji && normalizedInput === D.answerRomaji) ||
@@ -1289,7 +1291,7 @@ function checkAnswer() {
 
   if (correct) {
     inp.classList.add('correct');
-    fb.className = 'feedback correct'; fb.textContent = '✓ Correct!';
+    ca.className = 'correct-answer';
     D.correct++;
     if (D.type === 'phase2') {
       const fid = D.questionQueue[ci]?.p2formId;
@@ -1297,8 +1299,8 @@ function checkAnswer() {
     }
   } else {
     inp.classList.add('wrong');
-    fb.className = 'feedback wrong';
-    fb.innerHTML = `✗ Not quite.<div class="feedback-answer">${D.answer}</div>`;
+    caKana.textContent = D.answer;
+    ca.className = 'correct-answer visible';
     D.wrong++;
   }
 
@@ -1540,8 +1542,6 @@ function renderFormGrid() {
     card.innerHTML = `
       ${badgeHTML}
       <div class="form-card-name">${form.name}</div>
-      <div class="form-card-jp">${form.jpEx}</div>
-      <div class="form-card-groups" style="font-family:'IBM Plex Mono',monospace;font-size:.58rem;color:var(--text-faint);letter-spacing:.04em">${grpText}</div>
       ${statusHTML}`;
 
     if (finalReady) {
@@ -1572,6 +1572,10 @@ function renderReference() {
     sec.className = 'ref-section';
 
     let subHTML = '';
+    // Usage paragraph above all subgroup headers
+    if (form.usage) {
+      subHTML += `<div class="ref-usage">${form.usage}</div>`;
+    }
     for (const g of confirmed) {
       let exHTML = '';
       for (const ex of g.examples)
@@ -1583,7 +1587,6 @@ function renderReference() {
     sec.innerHTML = `
       <div class="ref-section-header" onclick="this.parentElement.classList.toggle('open')">
         <span class="ref-section-name">${form.name}</span>
-        <span class="ref-section-jp">${form.jpEx}</span>
         <span class="ref-section-count">${confirmed.length} group${confirmed.length>1?'s':''}</span>
         <span class="ref-section-toggle">▾</span>
       </div>
