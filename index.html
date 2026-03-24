@@ -20,14 +20,13 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .app{max-width:720px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;padding:0 24px}
 
 /* HEADER */
-header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
+header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .logo{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--amber);letter-spacing:.05em}
 .logo-jp{font-family:'Noto Serif JP',serif;font-size:1.2rem;color:var(--text-dim)}
 .logo-sep{width:1px;height:14px;background:var(--border);display:inline-block;vertical-align:middle}
 .logo-sub{font-family:'IBM Plex Mono',monospace;font-size:.7rem;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase}
-.header-right{margin-left:auto;display:flex;align-items:center;gap:16px}
-.streak{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--text-dim);display:flex;align-items:center;gap:6px}
-.streak-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);box-shadow:0 0 6px var(--amber)}
+.header-right{margin-left:auto;display:flex;align-items:center}
+.streak{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--text-dim);padding:4px 10px;border:1px solid var(--border);border-radius:20px}
 
 /* TABS */
 .tab-bar{display:flex;margin-top:20px;border-bottom:1px solid var(--border)}
@@ -40,7 +39,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .view.active{display:flex;animation:fadeUp .2s ease}
 
 /* LEARN BANNER */
-.learn-banner{display:none;margin-top:24px;background:linear-gradient(135deg,rgba(201,138,58,.1),rgba(201,138,58,.04));border:1px solid var(--amber-dim);border-radius:8px;padding:18px 22px;gap:16px;align-items:center;animation:fadeUp .3s ease}
+.learn-banner{display:none;margin-top:24px;margin-bottom:8px;background:linear-gradient(135deg,rgba(201,138,58,.1),rgba(201,138,58,.04));border:1px solid var(--amber-dim);border-radius:8px;padding:18px 22px;gap:16px;align-items:center;animation:fadeUp .3s ease}
 .learn-banner.visible{display:flex}
 .learn-banner-icon{font-size:1.4rem;flex-shrink:0}
 .learn-banner-body{flex:1}
@@ -168,24 +167,23 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 
 /* INPUT */
 .input-area{display:flex;flex-direction:column;gap:10px}
-.input-row{display:flex;gap:10px}
-.answer-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:13px 16px;color:var(--cream);font-family:'Noto Serif JP',serif;font-size:1.1rem;outline:none;transition:border-color .15s;letter-spacing:.05em}
+.romaji-preview{min-height:36px;font-family:'Noto Serif JP',serif;font-size:1.4rem;color:var(--amber);letter-spacing:.08em;padding:4px 0;transition:opacity .1s;opacity:0;text-align:center}
+.romaji-preview.visible{opacity:1}
+.answer-input{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:14px 16px;color:var(--cream);font-family:'Noto Serif JP',serif;font-size:1.2rem;outline:none;transition:border-color .15s;letter-spacing:.05em;text-align:center}
 .answer-input:focus{border-color:var(--amber-dim)}
 .answer-input.correct{border-color:var(--green);background:rgba(74,140,92,.08)}
 .answer-input.wrong{border-color:var(--red);background:rgba(184,64,64,.08)}
-.submit-btn{background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.1em;padding:0 18px;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.submit-btn{width:100%;background:var(--bg3);border:1px solid var(--border);color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.12em;padding:13px 0;border-radius:5px;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
 .submit-btn:hover{background:var(--amber);border-color:var(--amber);color:#0e0c0a}
 .feedback{display:none}
-.correct-answer{display:none;margin-top:4px;padding:14px 18px;background:rgba(184,64,64,.06);border:1px solid var(--red);border-radius:5px;animation:fadeUp .2s ease}
+.correct-answer{display:none;padding:16px 18px;background:rgba(184,64,64,.06);border:1px solid var(--red);border-radius:5px;text-align:center;animation:fadeUp .2s ease}
 .correct-answer.visible{display:block}
 .correct-answer-label{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:#d06060;margin-bottom:8px}
 .correct-answer-kana{font-family:'Noto Serif JP',serif;font-size:1.6rem;color:var(--cream);letter-spacing:.06em}
-.next-btn{display:none;align-self:flex-end;background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;padding:8px 18px;border-radius:4px;cursor:pointer;transition:border-color .15s,color .15s}
+.next-btn{display:none;width:100%;text-align:center;background:none;border:1px solid var(--border);color:var(--text-dim);font-family:'IBM Plex Mono',monospace;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;padding:11px 0;border-radius:4px;cursor:pointer;transition:border-color .15s,color .15s}
 .next-btn.visible{display:block}
 .next-btn:hover{border-color:var(--amber);color:var(--amber)}
-.romaji-preview{min-height:32px;font-family:'Noto Serif JP',serif;font-size:1.4rem;color:var(--amber);letter-spacing:.08em;padding:4px 0;transition:opacity .1s;opacity:0;text-align:center}
-.romaji-preview.visible{opacity:1}
-.drill-stats-bar{display:flex;gap:28px;padding:20px 0;border-top:1px solid var(--border);margin-top:auto}
+.drill-stats-bar{display:flex;gap:28px;padding:20px 0;border-top:1px solid var(--border);margin-top:auto;justify-content:center}
 
 /* RESET */
 .reset-row{text-align:center;padding:16px 0 32px}
@@ -200,9 +198,8 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 
 @media(max-width:500px){
   .app{padding:0 16px}
-  .sentence-card{padding:22px 18px}
   .form-grid{grid-template-columns:1fr 1fr}
-  .stats-bar,.drill-stats-bar{gap:16px;flex-wrap:wrap}
+  .stats-bar,.drill-stats-bar{gap:16px}
   .modal{padding:24px 18px}
   .learn-banner{flex-wrap:wrap}
   .srs-panel-footer{flex-direction:column;align-items:flex-start}
@@ -217,7 +214,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
   <span class="logo-jp">動詞</span><span class="logo-sep"></span>
   <span class="logo-sub">Verb Forms</span>
   <div class="header-right">
-    <div class="streak"><div class="streak-dot"></div><span id="streakCount">0 day streak</span></div>
+    <div class="streak"><span id="streakCount">0 day streak</span></div>
   </div>
 </header>
 
@@ -249,7 +246,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
     <div class="form-grid" id="formGrid"></div>
   </div>
 
-  <div id="srsSection" style="display:none">
+  <div id="srsSection" style="display:none;margin-top:8px">
     <div class="section-label">SRS Review</div>
     <div class="srs-panel">
       <div class="srs-chips-row" id="srsChips"></div>
@@ -296,11 +293,9 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
   </div>
 
   <div class="input-area" id="inputArea" style="display:none">
-    <div class="input-row">
-      <input class="answer-input" id="answerInput" type="text" placeholder="答えを入力…" autocomplete="off" autocorrect="off" spellcheck="false"/>
-      <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">Check</button>
-    </div>
     <div class="romaji-preview" id="romajiPreview"></div>
+    <input class="answer-input" id="answerInput" type="text" placeholder="答えを入力…" autocomplete="off" autocorrect="off" spellcheck="false"/>
+    <button class="submit-btn" id="submitBtn" onclick="checkAnswer()">Check</button>
     <div class="correct-answer" id="correctAnswer">
       <div class="correct-answer-label">Correct answer</div>
       <div class="correct-answer-kana" id="correctAnswerKana"></div>
@@ -310,9 +305,9 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
   </div>
 
   <div class="drill-stats-bar">
+    <div class="stat"><div class="stat-val" id="drillRemaining">10</div><div class="stat-label">Remaining</div></div>
     <div class="stat"><div class="stat-val" id="drillCorrect">0</div><div class="stat-label">Correct</div></div>
     <div class="stat"><div class="stat-val" id="drillWrong">0</div><div class="stat-label">Wrong</div></div>
-    <div class="stat"><div class="stat-val" id="drillRemaining">10</div><div class="stat-label">Remaining</div></div>
   </div>
 </div>
 
