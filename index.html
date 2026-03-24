@@ -56,7 +56,9 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .modal{background:var(--bg2);border:1px solid var(--border);border-radius:10px;max-width:560px;width:100%;max-height:82vh;overflow-y:auto;padding:36px 40px;animation:slideUp .25s ease}
 .modal-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:var(--amber);margin-bottom:8px}
 .modal-title{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--cream);margin-bottom:4px}
-.modal-subtitle{font-size:.85rem;color:var(--text-dim);margin-bottom:22px;padding-bottom:18px;border-bottom:1px solid var(--border)}
+.modal-usage{font-size:.85rem;line-height:1.7;color:var(--text);margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--border)}
+.modal-usage:empty{display:none}
+.modal-subtitle{font-family:'IBM Plex Mono',monospace;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;color:var(--amber);margin-bottom:12px}
 .modal-body{font-size:.88rem;line-height:1.75;color:var(--text)}
 .modal-body p{margin-bottom:12px}
 .modal-examples{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px 18px;margin:14px 0;display:flex;flex-direction:column;gap:9px}
@@ -108,7 +110,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .badge-unread{background:rgba(201,138,58,.15);color:var(--amber);border:1px solid var(--amber-dim)}
 .form-card-name{font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);margin-bottom:4px}
 .form-card-jp{font-family:'Noto Serif JP',serif;font-size:.73rem;color:var(--text-dim);margin-bottom:6px}
-.form-card-status{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--text-faint);letter-spacing:.04em;margin-top:4px}
+.form-card-status{font-family:'IBM Plex Mono',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:.04em;margin-top:4px}
 .form-card-status.s-ready{color:var(--green)}
 .form-card-status.s-final{color:var(--amber)}
 .form-card-status.s-unread{color:var(--amber)}
@@ -116,7 +118,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .stats-bar{display:flex;gap:28px;padding:24px 0;border-top:1px solid var(--border);margin-top:auto;justify-content:center}
 .stat{display:flex;flex-direction:column;gap:3px;align-items:center}
 .stat-val{font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);text-align:center}
-.stat-label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-faint);text-align:center}
+.stat-label{font-family:'IBM Plex Mono',monospace;font-size:.58rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);text-align:center}
 
 /* REFERENCE */
 .ref-section{margin-top:28px;border:1px solid var(--border);border-radius:8px;overflow:hidden}
@@ -161,6 +163,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 .verb-card{display:none;margin:32px 0 20px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:36px 40px;flex-direction:column;align-items:center;text-align:center;gap:0;animation:fadeUp .18s ease}
 .verb-card-dict{font-family:'Noto Serif JP',serif;font-size:clamp(2rem,7vw,2.8rem);color:var(--cream);letter-spacing:.06em;line-height:1.3}
 .verb-card-furi{font-family:'Noto Serif JP',serif;font-size:.95rem;color:var(--text-dim);margin-top:6px;letter-spacing:.08em}
+.verb-card-def{font-family:'DM Sans',sans-serif;font-size:.78rem;color:var(--text-dim);font-style:italic;margin-top:5px;letter-spacing:.02em}
 .verb-card-divider{width:48px;height:1px;background:var(--border);margin:20px auto}
 .verb-card-cue{font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:var(--text);line-height:1.5;max-width:340px}
 
@@ -287,6 +290,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
   <div class="verb-card" id="verbCard">
     <div class="verb-card-dict" id="vcDict"></div>
     <div class="verb-card-furi" id="vcFuri"></div>
+    <div class="verb-card-def"  id="vcDef"></div>
     <div class="verb-card-divider"></div>
     <div class="verb-card-cue"  id="vcCue"></div>
   </div>
@@ -313,6 +317,7 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
   <div class="modal">
     <div class="modal-eyebrow" id="modalEyebrow">New Form Unlocked</div>
     <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-usage" id="modalUsage"></div>
     <div class="modal-subtitle" id="modalSubtitle"></div>
     <div class="modal-body" id="modalBody"></div>
     <div class="modal-footer"><button class="got-it-btn" id="gotItBtn" onclick="confirmCard()">Got it ✓</button></div>
@@ -329,140 +334,112 @@ header{padding:28px 0 0;display:flex;align-items:baseline;gap:14px}
 // FORMS DATA
 // ════════════════════════════════════════════
 const FORMS = [
-  // ─────────────────────────────────────────
-  // て-form
-  // ─────────────────────────────────────────
   {
     id:'te', name:'て-form', jpEx:'食べて・書いて',
+    usage:`The て-form is one of the most productive forms in Japanese. It chains sequential actions (食べて寝る — ate and then slept), makes polite requests with ください, forms the progressive 〜ている (is doing / has done), and anchors patterns like 〜てから (after doing), 〜てもいい (may I), 〜てはいけない (must not), and 〜てあげる / くれる / もらう (giving and receiving actions).`,
     groups:[
       { id:'te-ru', name:'る-verbs',
-        body:`<p><strong>Usage:</strong> The て-form is one of the most productive forms in Japanese. It chains sequential actions (食べて寝る — ate and then slept), makes polite requests with ください, forms the progressive 〜ている (is doing / has done), and anchors dozens of grammar patterns: 〜てから (after doing), 〜てもいい (is it okay if), 〜てはいけない (must not), 〜てあげる/くれる/もらう (giving and receiving actions).</p>
-              <p><strong>Rule:</strong> For る-verbs (ichidan), drop る and add て. The stem never changes — this is the simplest case with no sound shifts.</p>`,
-        examples:[{from:'食べる',to:'食べて',en:'eat → (please) eat / eating'},{from:'見る',to:'見て',en:'see → (please) see / seeing'},{from:'起きる',to:'起きて',en:'wake up → waking up'},{from:'教える',to:'教えて',en:'teach → please teach me'}]},
+        body:`<p><strong>Rule:</strong> Drop る and add て. The stem never changes — this is the simplest case with no sound shifts.</p>`,
+        examples:[{from:'食べる',to:'食べて',en:'(please) eat / eating'},{from:'見る',to:'見て',en:'(please) see'},{from:'起きる',to:'起きて',en:'waking up'},{from:'教える',to:'教えて',en:'please teach me'}]},
       { id:'te-ku', name:'う-verbs: く → いて',
-        body:`<p><strong>Rule:</strong> For う-verbs ending in く, drop く and add いて. The vowel shifts from the u-row to the i-row — a pattern you'll see across many forms. One famous exception: 行く (いく) → 行って, not 行いて. It's the only く-verb that breaks this rule.</p>`,
-        examples:[{from:'書く',to:'書いて',en:'write → (please) write'},{from:'聞く',to:'聞いて',en:'listen → please listen'},{from:'歩く',to:'歩いて',en:'walk → walking'},{from:'行く ⚠',to:'行って',en:'go → going (exception!)'}]},
+        body:`<p><strong>Rule:</strong> Drop く and add いて. One famous exception: 行く → 行って (not 行いて) — the only く-verb that breaks this rule.</p>`,
+        examples:[{from:'書く',to:'書いて',en:'(please) write'},{from:'聞く',to:'聞いて',en:'please listen'},{from:'歩く',to:'歩いて',en:'walking'},{from:'行く ⚠',to:'行って',en:'going (exception!)'}]},
       { id:'te-gu', name:'う-verbs: ぐ → いで',
-        body:`<p><strong>Rule:</strong> Verbs ending in ぐ follow the same i-row shift as く, but preserve the voiced consonant: ぐ → いで (not いて). Think of it as the voiced twin of the く rule.</p>`,
-        examples:[{from:'泳ぐ',to:'泳いで',en:'swim → swimming'},{from:'急ぐ',to:'急いで',en:'hurry → please hurry'},{from:'脱ぐ',to:'脱いで',en:'take off (clothes) → please take off'},{from:'稼ぐ',to:'稼いで',en:'earn → earning'}]},
+        body:`<p><strong>Rule:</strong> Same i-row shift as く, but the voiced consonant is preserved: ぐ → いで (not いて).</p>`,
+        examples:[{from:'泳ぐ',to:'泳いで',en:'swimming'},{from:'急ぐ',to:'急いで',en:'please hurry'},{from:'脱ぐ',to:'脱いで',en:'taking off (clothes)'},{from:'稼ぐ',to:'稼いで',en:'earning'}]},
       { id:'te-su', name:'う-verbs: す → して',
-        body:`<p><strong>Rule:</strong> Verbs ending in す always become して. This is its own irregular-looking pattern — not a standard vowel-row shift. す → して, without exception.</p>`,
-        examples:[{from:'話す',to:'話して',en:'speak → please speak'},{from:'貸す',to:'貸して',en:'lend → please lend me'},{from:'探す',to:'探して',en:'search → searching'},{from:'消す',to:'消して',en:'turn off / erase → please turn off'}]},
+        body:`<p><strong>Rule:</strong> す always becomes して — not a standard vowel-row shift, just its own fixed pattern. す → して, every time.</p>`,
+        examples:[{from:'話す',to:'話して',en:'please speak'},{from:'貸す',to:'貸して',en:'please lend me'},{from:'探す',to:'探して',en:'searching'},{from:'消す',to:'消して',en:'please turn off'}]},
       { id:'te-tsu', name:'う-verbs: つ・う・る → って',
-        body:`<p><strong>Rule:</strong> Three different endings share the same て-form: つ, う, and godan-る all become って. The key difficulty is distinguishing godan-る (→ って) from ichidan-る (→ て) — there's no phonological cue, only vocabulary knowledge.</p>`,
-        examples:[{from:'待つ',to:'待って',en:'wait → please wait'},{from:'買う',to:'買って',en:'buy → buying'},{from:'取る',to:'取って',en:'take → please take'},{from:'帰る ⚠',to:'帰って',en:'return home → going home (godan!)'}]},
+        body:`<p><strong>Rule:</strong> Endings つ, う, and godan-る all become って. Key difficulty: distinguishing godan-る (→ って) from ichidan-る (→ て) requires vocabulary knowledge, not phonology.</p>`,
+        examples:[{from:'待つ',to:'待って',en:'please wait'},{from:'買う',to:'買って',en:'buying'},{from:'取る',to:'取って',en:'please take'},{from:'帰る ⚠',to:'帰って',en:'going home (godan!)'}]},
       { id:'te-mu', name:'う-verbs: ぬ・ぶ・む → んで',
-        body:`<p><strong>Rule:</strong> Endings ぬ, ぶ, and む all merge into んで. The nasal ん absorbs the preceding consonant and voiced で follows. These three are often called the "ん-group."</p>`,
-        examples:[{from:'飲む',to:'飲んで',en:'drink → (please) drink'},{from:'読む',to:'読んで',en:'read → (please) read'},{from:'遊ぶ',to:'遊んで',en:'play → playing'},{from:'死ぬ',to:'死んで',en:'die → dying'}]},
+        body:`<p><strong>Rule:</strong> Endings ぬ, ぶ, and む all merge into んで. The nasal ん absorbs the consonant and voiced で follows. Often called the "ん-group."</p>`,
+        examples:[{from:'飲む',to:'飲んで',en:'(please) drink'},{from:'読む',to:'読んで',en:'(please) read'},{from:'遊ぶ',to:'遊んで',en:'playing'},{from:'死ぬ',to:'死んで',en:'dying'}]},
       { id:'te-irr', name:'Irregular verbs: する・くる',
-        body:`<p><strong>Rule:</strong> する → して, くる → きて. Both are fully irregular — memorize them as fixed forms. する also powers hundreds of compound verbs: any noun + する conjugates identically (勉強して, 電話して, 練習して). Once you know して, all する-compounds come for free.</p>`,
-        examples:[{from:'する',to:'して',en:'do → doing / please do'},{from:'くる',to:'きて',en:'come → coming / please come'},{from:'勉強する',to:'勉強して',en:'study → (please) study'},{from:'電話する',to:'電話して',en:'call → please call me'}]},
+        body:`<p><strong>Rule:</strong> する → して, くる → きて. Both must be memorized as fixed forms. All する-compounds follow して: 勉強して, 電話して, 練習して.</p>`,
+        examples:[{from:'する',to:'して',en:'doing / please do'},{from:'くる',to:'きて',en:'coming / please come'},{from:'勉強する',to:'勉強して',en:'(please) study'},{from:'電話する',to:'電話して',en:'please call me'}]},
     ]
   },
-
-  // ─────────────────────────────────────────
-  // ない-form
-  // ─────────────────────────────────────────
   {
     id:'nai', name:'ない-form', jpEx:'食べない・書かない',
+    usage:`The ない-form is the plain (casual) negative for present and future actions. It anchors key patterns: 〜ないで (without doing / don't), 〜なければならない (must), 〜ないといけない (have to), and 〜ていない (haven't done yet). In formal speech, ない becomes ません.`,
     groups:[
       { id:'nai-ru', name:'る-verbs',
-        body:`<p><strong>Usage:</strong> The ない-form is the plain (casual) negative for present and future actions. It's the base of key patterns: 〜ないで (without doing / don't do), 〜なければならない (must), 〜ないといけない (have to), and 〜ていない (haven't done yet). In formal speech, replace ない with ません.</p>
-              <p><strong>Rule:</strong> For る-verbs, drop る and add ない. Identical stem to the て-form.</p>`,
+        body:`<p><strong>Rule:</strong> Drop る and add ない. The stem is identical to て-form.</p>`,
         examples:[{from:'食べる',to:'食べない',en:"don't eat"},{from:'見る',to:'見ない',en:"don't see"},{from:'起きる',to:'起きない',en:"don't wake up"},{from:'寝る',to:'寝ない',en:"don't sleep"}]},
       { id:'nai-u', name:'う-verbs + the わ rule',
         body:`<p><strong>Rule:</strong> Shift the final kana to the あ-row and add ない: く→かない, ぐ→がない, す→さない, つ→たない, ぬ→なない, ぶ→ばない, む→まない, る→らない.</p>
-              <p>Critical exception: verbs ending in う become わない, not あない. The hiragana わ is a historical form that surfaces only here — it must be memorized as a special case.</p>`,
+              <p>Critical exception: verbs ending in う become わない, not あない. The わ is a historical form that only surfaces here.</p>`,
         examples:[{from:'書く',to:'書かない',en:"don't write"},{from:'話す',to:'話さない',en:"don't speak"},{from:'待つ',to:'待たない',en:"don't wait"},{from:'買う',to:'買わない',en:"don't buy (わ rule!)"},{from:'飲む',to:'飲まない',en:"don't drink"}]},
       { id:'nai-irr', name:'Irregular verbs: する・くる',
-        body:`<p><strong>Rule:</strong> する → しない, くる → こない. Note that くる shifts its vowel to こ — no regular pattern explains this. All する-compounds follow the same rule: 勉強しない, 運動しない.</p>`,
+        body:`<p><strong>Rule:</strong> する → しない, くる → こない. Note こ — no regular pattern explains this vowel shift. All する-compounds follow: 勉強しない, 運動しない.</p>`,
         examples:[{from:'する',to:'しない',en:"don't do"},{from:'くる',to:'こない',en:"don't come"},{from:'勉強する',to:'勉強しない',en:"don't study"},{from:'運動する',to:'運動しない',en:"don't exercise"}]},
     ]
   },
-
-  // ─────────────────────────────────────────
-  // たい・たくない
-  // ─────────────────────────────────────────
   {
     id:'tai', name:'たい・たくない', jpEx:'食べたい・行きたくない',
+    usage:`たい expresses the speaker's own desire to do something — "I want to ~." It applies only to first-person subjects; use 〜たがっている for third-party desires. Because たい conjugates like an い-adjective, it has a past たかった (wanted to) and can modify nouns: 食べたいもの (things I want to eat). The negative たくない means "I don't want to ~."`,
     groups:[
       { id:'tai-all', name:'Positive: たい (want to)',
-        body:`<p><strong>Usage:</strong> たい expresses the speaker's own desire to do something — "I want to ~." It applies only to first-person subjects; use 〜たがっている for third-party desires. Because たい conjugates like an い-adjective, the past is たかった (wanted to) and it can modify nouns: 食べたいもの (things I want to eat).</p>
-              <p><strong>Rule:</strong> Attach たい to the ます-stem: for る-verbs drop る, for う-verbs shift to the い-row. The stem is the same one used for ます.</p>`,
+        body:`<p><strong>Rule:</strong> Attach たい to the ます-stem: drop る for ichidan verbs, shift to the い-row for godan verbs. This is the same stem used for ます.</p>`,
         examples:[{from:'食べる',to:'食べたい',en:'want to eat'},{from:'飲む',to:'飲みたい',en:'want to drink'},{from:'行く',to:'行きたい',en:'want to go'},{from:'する',to:'したい',en:'want to do'}]},
       { id:'tai-neg', name:'Negative: たくない (don\'t want to)',
-        body:`<p><strong>Usage:</strong> たくない means "I don't want to ~." Like all い-adjective negatives it has a past form: たくなかった (didn't want to). Use with some care — it can sound blunt in direct speech.</p>
-              <p><strong>Rule:</strong> Take the たい form, drop い, and add くない. This is exactly the い-adjective negative rule — no new stem changes.</p>`,
+        body:`<p><strong>Rule:</strong> Take the たい form, drop い, and add くない — exactly the い-adjective negative. No new stem changes. Past negative: たくなかった.</p>`,
         examples:[{from:'食べる',to:'食べたくない',en:"don't want to eat"},{from:'行く',to:'行きたくない',en:"don't want to go"},{from:'起きる',to:'起きたくない',en:"don't want to wake up"},{from:'する',to:'したくない',en:"don't want to do"}]},
     ]
   },
-
-  // ─────────────────────────────────────────
-  // ます-form
-  // ─────────────────────────────────────────
   {
     id:'masu', name:'ます-form', jpEx:'食べます・書きます',
+    usage:`ます-form is the polite register for conversations with anyone you're not close to — strangers, colleagues, teachers. It signals social distance and respect. The negative is ません, past is ました, past negative is ませんでした. The ます-stem (without ます) is also the base for たい and several compound forms.`,
     groups:[
       { id:'masu-ru', name:'る-verbs',
-        body:`<p><strong>Usage:</strong> ます-form (the polite or "formal" form) is the standard register for conversations with strangers, colleagues, teachers, and anyone you don't know well. It signals social distance and respect. The negative is ません, the past is ました, and the past negative is ませんでした. The ます-stem (without ます) is also the base for たい, and is used in compound forms.</p>
-              <p><strong>Rule:</strong> For る-verbs, drop る and add ます. Identical stem to て-form and ない-form.</p>`,
-        examples:[{from:'食べる',to:'食べます',en:'eat → eat (polite)'},{from:'見る',to:'見ます',en:'see → see (polite)'},{from:'起きる',to:'起きます',en:'wake up → wake up (polite)'},{from:'覚える',to:'覚えます',en:'memorize → memorize (polite)'}]},
+        body:`<p><strong>Rule:</strong> Drop る and add ます. Identical stem to て-form and ない-form.</p>`,
+        examples:[{from:'食べる',to:'食べます',en:'eat (polite)'},{from:'見る',to:'見ます',en:'see (polite)'},{from:'起きる',to:'起きます',en:'wake up (polite)'},{from:'覚える',to:'覚えます',en:'memorize (polite)'}]},
       { id:'masu-u', name:'う-verbs',
-        body:`<p><strong>Rule:</strong> Shift the final kana to the い-row and add ます: く→きます, ぐ→ぎます, す→します, つ→ちます, う→います, る→ります, ぬ→にます, ぶ→びます, む→みます. This is the same い-row stem used for たい.</p>`,
-        examples:[{from:'書く',to:'書きます',en:'write → write (polite)'},{from:'話す',to:'話します',en:'speak → speak (polite)'},{from:'待つ',to:'待ちます',en:'wait → wait (polite)'},{from:'飲む',to:'飲みます',en:'drink → drink (polite)'},{from:'帰る ⚠',to:'帰ります',en:'return home → return home (polite, godan!)'}]},
+        body:`<p><strong>Rule:</strong> Shift the final kana to the い-row and add ます: く→きます, ぐ→ぎます, す→します, つ→ちます, う→います, る→ります, ぬ→にます, ぶ→びます, む→みます. Same い-row stem as たい.</p>`,
+        examples:[{from:'書く',to:'書きます',en:'write (polite)'},{from:'話す',to:'話します',en:'speak (polite)'},{from:'待つ',to:'待ちます',en:'wait (polite)'},{from:'飲む',to:'飲みます',en:'drink (polite)'},{from:'帰る ⚠',to:'帰ります',en:'return home (polite, godan!)'}]},
       { id:'masu-irr', name:'Irregular verbs: する・くる',
-        body:`<p><strong>Rule:</strong> する → します, くる → きます. Note します shares the し stem with して and した — consistent across forms. All する-compounds follow: 勉強します, 電話します.</p>`,
-        examples:[{from:'する',to:'します',en:'do → do (polite)'},{from:'くる',to:'きます',en:'come → come (polite)'},{from:'勉強する',to:'勉強します',en:'study → study (polite)'},{from:'練習する',to:'練習します',en:'practice → practice (polite)'}]},
+        body:`<p><strong>Rule:</strong> する → します, くる → きます. All する-compounds follow: 勉強します, 電話します.</p>`,
+        examples:[{from:'する',to:'します',en:'do (polite)'},{from:'くる',to:'きます',en:'come (polite)'},{from:'勉強する',to:'勉強します',en:'study (polite)'},{from:'練習する',to:'練習します',en:'practice (polite)'}]},
     ]
   },
-
-  // ─────────────────────────────────────────
-  // た-form (plain past)
-  // ─────────────────────────────────────────
   {
     id:'ta', name:'た-form', jpEx:'食べた・書いた',
+    usage:`The た-form is the plain past tense — the casual equivalent of ました. It also anchors 〜たことがある (have experienced), 〜たあとで (after doing), 〜たり〜たりする (doing things like X and Y), and 〜たら (conditional: if/when X happened).`,
     groups:[
       { id:'ta-ru', name:'る-verbs',
-        body:`<p><strong>Usage:</strong> The た-form is the plain past tense — the casual equivalent of ました. It also anchors several essential patterns: 〜たことがある (have experienced), 〜たあとで (after doing), 〜たり〜たりする (do things like X and Y), and 〜たら (conditional: if/when X happens/happened).</p>
-              <p><strong>Rule:</strong> For る-verbs, drop る and add た. Exactly mirrors the て-form: same stem, て → た.</p>`,
+        body:`<p><strong>Rule:</strong> Drop る and add た. Exactly mirrors て-form: same stem, て → た.</p>`,
         examples:[{from:'食べる',to:'食べた',en:'ate'},{from:'見る',to:'見た',en:'saw'},{from:'起きる',to:'起きた',en:'woke up'},{from:'疲れる',to:'疲れた',en:'got tired'}]},
       { id:'ta-u', name:'う-verbs',
-        body:`<p><strong>Rule:</strong> The た-form of う-verbs directly mirrors the て-form — just replace て with た and voiced で with voiced だ: いて→いた, いで→いだ, して→した, って→った, んで→んだ. The 行く exception carries over: 行く → 行った (not 行いた). If you know the て-form, you already know this.</p>`,
+        body:`<p><strong>Rule:</strong> Directly mirrors て-form — replace て with た and voiced で with voiced だ: いて→いた, いで→いだ, して→した, って→った, んで→んだ. The 行く exception carries over: 行く → 行った.</p>`,
         examples:[{from:'書く',to:'書いた',en:'wrote'},{from:'話す',to:'話した',en:'spoke'},{from:'待つ',to:'待った',en:'waited'},{from:'飲む',to:'飲んだ',en:'drank'},{from:'帰る ⚠',to:'帰った',en:'went home (godan!)'}]},
       { id:'ta-irr', name:'Irregular verbs: する・くる',
-        body:`<p><strong>Rule:</strong> する → した, くる → きた. Mirrors the て-form stems directly: して→した, きて→きた. Compounds follow: 勉強した, 電話した.</p>`,
+        body:`<p><strong>Rule:</strong> する → した, くる → きた. Mirrors て-form stems directly: して→した, きて→きた. Compounds follow: 勉強した, 電話した.</p>`,
         examples:[{from:'する',to:'した',en:'did'},{from:'くる',to:'きた',en:'came'},{from:'勉強する',to:'勉強した',en:'studied'},{from:'電話する',to:'電話した',en:'called'}]},
     ]
   },
-
-  // ─────────────────────────────────────────
-  // Potential form
-  // ─────────────────────────────────────────
   {
     id:'potential', name:'Potential form', jpEx:'食べられる・書ける',
+    usage:`The potential form expresses ability or possibility — "can do" / "is able to do." The direct object often shifts from を to が (パンを食べる → パンが食べられる). In casual speech, the ら is often dropped from ichidan potentials (食べれる instead of 食べられる) — called ら抜き言葉, non-standard in writing but very common.`,
     groups:[
       { id:'pot-ru', name:'る-verbs',
-        body:`<p><strong>Usage:</strong> The potential form expresses ability or possibility — "can do" or "is able to do." The direct object often shifts from を to が (パンを食べる → パンが食べられる). In casual spoken Japanese, the ら is frequently dropped (食べれる instead of 食べられる) — this is called ら抜き言葉 and is considered non-standard in writing, though very common in speech.</p>
-              <p><strong>Rule:</strong> For る-verbs, drop る and add られる.</p>`,
+        body:`<p><strong>Rule:</strong> Drop る and add られる.</p>`,
         examples:[{from:'食べる',to:'食べられる',en:'can eat'},{from:'見る',to:'見られる',en:'can see'},{from:'起きる',to:'起きられる',en:'can wake up'},{from:'覚える',to:'覚えられる',en:'can memorize'}]},
       { id:'pot-u', name:'う-verbs',
-        body:`<p><strong>Rule:</strong> Shift the final kana to the え-row and add る: く→ける, ぐ→げる, す→せる, つ→てる, う→える, る→れる, ぬ→ねる, ぶ→べる, む→める. The result is always an ichidan verb, which is why it takes て-form て (書ける → 書けて).</p>`,
+        body:`<p><strong>Rule:</strong> Shift the final kana to the え-row and add る: く→ける, ぐ→げる, す→せる, つ→てる, う→える, る→れる, ぬ→ねる, ぶ→べる, む→める. The result is always an ichidan verb.</p>`,
         examples:[{from:'書く',to:'書ける',en:'can write'},{from:'泳ぐ',to:'泳げる',en:'can swim'},{from:'話す',to:'話せる',en:'can speak'},{from:'飲む',to:'飲める',en:'can drink'},{from:'帰る ⚠',to:'帰れる',en:'can go home (godan!)'}]},
       { id:'pot-irr', name:'Irregular verbs: する・くる',
-        body:`<p><strong>Rule:</strong> する → できる (a completely different word — must be memorized as a special case). All する-compounds replace する with できる: 勉強できる, 電話できる. くる → こられる.</p>`,
+        body:`<p><strong>Rule:</strong> する → できる (a completely different word — must be memorized). All する-compounds use できる: 勉強できる, 電話できる. くる → こられる.</p>`,
         examples:[{from:'する',to:'できる',en:'can do (special!)'},{from:'くる',to:'こられる',en:'can come'},{from:'勉強する',to:'勉強できる',en:'can study'},{from:'料理する',to:'料理できる',en:'can cook'}]},
     ]
   },
-
-  // ─────────────────────────────────────────
-  // Volitional form
-  // ─────────────────────────────────────────
   {
     id:'volitional', name:'Volitional form', jpEx:'食べよう・書こう',
+    usage:`The volitional form expresses a suggestion ("Let's ~") when talking to others, or a first-person intention ("I think I'll ~") when thinking aloud. It anchors 〜と思っている (I'm thinking of doing), 〜としている (is about to do), and 〜うとする (try to do). In polite speech, use the ましょう equivalent.`,
     groups:[
       { id:'vol-ru', name:'る-verbs',
-        body:`<p><strong>Usage:</strong> The volitional form expresses a suggestion ("Let's ~") when talking to others, or a first-person intention ("I think I'll ~" / "I will ~") when thinking aloud. It anchors patterns like 〜と思っている (I'm thinking of doing), 〜としている (is about to do), and 〜うとする (try to do). In polite speech, use the ましょう equivalent instead.</p>
-              <p><strong>Rule:</strong> For る-verbs, drop る and add よう.</p>`,
+        body:`<p><strong>Rule:</strong> Drop る and add よう.</p>`,
         examples:[{from:'食べる',to:'食べよう',en:"let's eat / I'll eat"},{from:'見る',to:'見よう',en:"let's watch"},{from:'起きる',to:'起きよう',en:"let's get up"},{from:'始める',to:'始めよう',en:"let's begin"}]},
       { id:'vol-u', name:'う-verbs',
         body:`<p><strong>Rule:</strong> Shift the final kana to the お-row and add う: く→こう, ぐ→ごう, す→そう, つ→とう, う→おう, る→ろう, ぬ→のう, ぶ→ぼう, む→もう.</p>`,
@@ -879,6 +856,66 @@ function toRomaji(str) {
 }
 
 // ════════════════════════════════════════════
+// ROMAJI → HIRAGANA (live preview)
+// ════════════════════════════════════════════
+function romajiToHiragana(str) {
+  str = str.toLowerCase();
+  // Longest-match map (3-char entries checked before 2-char, 2-char before 1-char)
+  const MAP = [
+    ['sha','しゃ'],['shi','し'],['shu','しゅ'],['sho','しょ'],
+    ['chi','ち'],  ['cha','ちゃ'],['chu','ちゅ'],['cho','ちょ'],
+    ['tsu','つ'],
+    ['kya','きゃ'],['kyu','きゅ'],['kyo','きょ'],
+    ['gya','ぎゃ'],['gyu','ぎゅ'],['gyo','ぎょ'],
+    ['nya','にゃ'],['nyu','にゅ'],['nyo','にょ'],
+    ['hya','ひゃ'],['hyu','ひゅ'],['hyo','ひょ'],
+    ['mya','みゃ'],['myu','みゅ'],['myo','みょ'],
+    ['rya','りゃ'],['ryu','りゅ'],['ryo','りょ'],
+    ['bya','びゃ'],['byu','びゅ'],['byo','びょ'],
+    ['ja','じゃ'], ['ji','じ'],  ['ju','じゅ'], ['jo','じょ'],
+    ['ka','か'],['ki','き'],['ku','く'],['ke','け'],['ko','こ'],
+    ['ga','が'],['gi','ぎ'],['gu','ぐ'],['ge','げ'],['go','ご'],
+    ['sa','さ'],['su','す'],['se','せ'],['so','そ'],
+    ['za','ざ'],['zu','ず'],['ze','ぜ'],['zo','ぞ'],
+    ['ta','た'],['te','て'],['to','と'],
+    ['da','だ'],['de','で'],['do','ど'],
+    ['na','な'],['ni','に'],['nu','ぬ'],['ne','ね'],['no','の'],
+    ['ha','は'],['hi','ひ'],['fu','ふ'],['he','へ'],['ho','ほ'],
+    ['ba','ば'],['bi','び'],['bu','ぶ'],['be','べ'],['bo','ぼ'],
+    ['pa','ぱ'],['pi','ぴ'],['pu','ぷ'],['pe','ぺ'],['po','ぽ'],
+    ['ma','ま'],['mi','み'],['mu','む'],['me','め'],['mo','も'],
+    ['ya','や'],['yu','ゆ'],['yo','よ'],
+    ['ra','ら'],['ri','り'],['ru','る'],['re','れ'],['ro','ろ'],
+    ['wa','わ'],['wo','を'],
+    ['a','あ'],['i','い'],['u','う'],['e','え'],['o','お'],
+  ];
+  let result = '', i = 0;
+  while (i < str.length) {
+    const c = str[i];
+    // double consonant → っ (but not 'nn' — handle n separately)
+    if (c !== 'n' && c === str[i+1] && !'aiueo'.includes(c)) {
+      result += 'っ'; i++; continue;
+    }
+    // n: convert to ん if followed by a consonant, another n, or end of string
+    if (c === 'n') {
+      const next = str[i+1];
+      if (!next || (next !== 'y' && !'aiueo'.includes(next))) {
+        result += 'ん'; i++; continue;
+      }
+    }
+    // greedy longest match
+    let matched = false;
+    for (const [rom, hira] of MAP) {
+      if (str.startsWith(rom, i)) {
+        result += hira; i += rom.length; matched = true; break;
+      }
+    }
+    if (!matched) { result += c; i++; }
+  }
+  return result;
+}
+
+// ════════════════════════════════════════════
 // CONJUGATION ENGINE
 // ════════════════════════════════════════════
 // verb.type: 'ichidan' | 'godan' | 'suru' | 'kuru' | 'suru-cpd'
@@ -961,99 +998,99 @@ function conjugate(verb, formId) {
 // type: ichidan | godan | suru | kuru | suru-cpd
 const VERBS = [
   // ── ICHIDAN (る-verbs) ──
-  {dict:'食べる',  furi:'たべる',     type:'ichidan'},
-  {dict:'見る',    furi:'みる',       type:'ichidan'},
-  {dict:'起きる',  furi:'おきる',     type:'ichidan'},
-  {dict:'寝る',    furi:'ねる',       type:'ichidan'},
-  {dict:'着る',    furi:'きる',       type:'ichidan'},
-  {dict:'教える',  furi:'おしえる',   type:'ichidan'},
-  {dict:'覚える',  furi:'おぼえる',   type:'ichidan'},
-  {dict:'忘れる',  furi:'わすれる',   type:'ichidan'},
-  {dict:'出る',    furi:'でる',       type:'ichidan'},
-  {dict:'開ける',  furi:'あける',     type:'ichidan'},
-  {dict:'閉める',  furi:'しめる',     type:'ichidan'},
-  {dict:'借りる',  furi:'かりる',     type:'ichidan'},
-  {dict:'疲れる',  furi:'つかれる',   type:'ichidan'},
-  {dict:'続ける',  furi:'つづける',   type:'ichidan'},
-  {dict:'始める',  furi:'はじめる',   type:'ichidan'},
-  {dict:'答える',  furi:'こたえる',   type:'ichidan'},
-  {dict:'考える',  furi:'かんがえる', type:'ichidan'},
-  {dict:'集める',  furi:'あつめる',   type:'ichidan'},
-  {dict:'調べる',  furi:'しらべる',   type:'ichidan'},
-  {dict:'入れる',  furi:'いれる',     type:'ichidan'},
+  {dict:'食べる',  furi:'たべる',     type:'ichidan', en:'to eat'},
+  {dict:'見る',    furi:'みる',       type:'ichidan', en:'to see / watch'},
+  {dict:'起きる',  furi:'おきる',     type:'ichidan', en:'to wake up / get up'},
+  {dict:'寝る',    furi:'ねる',       type:'ichidan', en:'to sleep / go to bed'},
+  {dict:'着る',    furi:'きる',       type:'ichidan', en:'to wear (upper body)'},
+  {dict:'教える',  furi:'おしえる',   type:'ichidan', en:'to teach / tell'},
+  {dict:'覚える',  furi:'おぼえる',   type:'ichidan', en:'to memorize / remember'},
+  {dict:'忘れる',  furi:'わすれる',   type:'ichidan', en:'to forget'},
+  {dict:'出る',    furi:'でる',       type:'ichidan', en:'to leave / exit'},
+  {dict:'開ける',  furi:'あける',     type:'ichidan', en:'to open'},
+  {dict:'閉める',  furi:'しめる',     type:'ichidan', en:'to close'},
+  {dict:'借りる',  furi:'かりる',     type:'ichidan', en:'to borrow'},
+  {dict:'疲れる',  furi:'つかれる',   type:'ichidan', en:'to get tired'},
+  {dict:'続ける',  furi:'つづける',   type:'ichidan', en:'to continue'},
+  {dict:'始める',  furi:'はじめる',   type:'ichidan', en:'to begin / start'},
+  {dict:'答える',  furi:'こたえる',   type:'ichidan', en:'to answer'},
+  {dict:'考える',  furi:'かんがえる', type:'ichidan', en:'to think / consider'},
+  {dict:'集める',  furi:'あつめる',   type:'ichidan', en:'to collect / gather'},
+  {dict:'調べる',  furi:'しらべる',   type:'ichidan', en:'to look up / investigate'},
+  {dict:'入れる',  furi:'いれる',     type:'ichidan', en:'to put in / insert'},
   // ── GODAN く ──
-  {dict:'書く',    furi:'かく',       type:'godan'},
-  {dict:'聞く',    furi:'きく',       type:'godan'},
-  {dict:'歩く',    furi:'あるく',     type:'godan'},
-  {dict:'働く',    furi:'はたらく',   type:'godan'},
-  {dict:'行く',    furi:'いく',       type:'godan'},
-  {dict:'置く',    furi:'おく',       type:'godan'},
-  {dict:'焼く',    furi:'やく',       type:'godan'},
-  {dict:'着く',    furi:'つく',       type:'godan'},
+  {dict:'書く',    furi:'かく',       type:'godan', en:'to write'},
+  {dict:'聞く',    furi:'きく',       type:'godan', en:'to listen / hear / ask'},
+  {dict:'歩く',    furi:'あるく',     type:'godan', en:'to walk'},
+  {dict:'働く',    furi:'はたらく',   type:'godan', en:'to work'},
+  {dict:'行く',    furi:'いく',       type:'godan', en:'to go'},
+  {dict:'置く',    furi:'おく',       type:'godan', en:'to put / place'},
+  {dict:'焼く',    furi:'やく',       type:'godan', en:'to bake / grill'},
+  {dict:'着く',    furi:'つく',       type:'godan', en:'to arrive'},
   // ── GODAN ぐ ──
-  {dict:'泳ぐ',    furi:'およぐ',     type:'godan'},
-  {dict:'急ぐ',    furi:'いそぐ',     type:'godan'},
-  {dict:'脱ぐ',    furi:'ぬぐ',       type:'godan'},
-  {dict:'稼ぐ',    furi:'かせぐ',     type:'godan'},
+  {dict:'泳ぐ',    furi:'およぐ',     type:'godan', en:'to swim'},
+  {dict:'急ぐ',    furi:'いそぐ',     type:'godan', en:'to hurry'},
+  {dict:'脱ぐ',    furi:'ぬぐ',       type:'godan', en:'to take off (clothing)'},
+  {dict:'稼ぐ',    furi:'かせぐ',     type:'godan', en:'to earn (money)'},
   // ── GODAN す ──
-  {dict:'話す',    furi:'はなす',     type:'godan'},
-  {dict:'貸す',    furi:'かす',       type:'godan'},
-  {dict:'探す',    furi:'さがす',     type:'godan'},
-  {dict:'返す',    furi:'かえす',     type:'godan'},
-  {dict:'出す',    furi:'だす',       type:'godan'},
-  {dict:'直す',    furi:'なおす',     type:'godan'},
-  {dict:'消す',    furi:'けす',       type:'godan'},
-  {dict:'押す',    furi:'おす',       type:'godan'},
+  {dict:'話す',    furi:'はなす',     type:'godan', en:'to speak / talk'},
+  {dict:'貸す',    furi:'かす',       type:'godan', en:'to lend'},
+  {dict:'探す',    furi:'さがす',     type:'godan', en:'to search / look for'},
+  {dict:'返す',    furi:'かえす',     type:'godan', en:'to return / give back'},
+  {dict:'出す',    furi:'だす',       type:'godan', en:'to take out / hand in'},
+  {dict:'直す',    furi:'なおす',     type:'godan', en:'to fix / correct'},
+  {dict:'消す',    furi:'けす',       type:'godan', en:'to erase / turn off'},
+  {dict:'押す',    furi:'おす',       type:'godan', en:'to push'},
   // ── GODAN つ ──
-  {dict:'待つ',    furi:'まつ',       type:'godan'},
-  {dict:'持つ',    furi:'もつ',       type:'godan'},
-  {dict:'勝つ',    furi:'かつ',       type:'godan'},
-  {dict:'立つ',    furi:'たつ',       type:'godan'},
+  {dict:'待つ',    furi:'まつ',       type:'godan', en:'to wait'},
+  {dict:'持つ',    furi:'もつ',       type:'godan', en:'to hold / have'},
+  {dict:'勝つ',    furi:'かつ',       type:'godan', en:'to win'},
+  {dict:'立つ',    furi:'たつ',       type:'godan', en:'to stand'},
   // ── GODAN う ──
-  {dict:'買う',    furi:'かう',       type:'godan'},
-  {dict:'使う',    furi:'つかう',     type:'godan'},
-  {dict:'習う',    furi:'ならう',     type:'godan'},
-  {dict:'歌う',    furi:'うたう',     type:'godan'},
-  {dict:'笑う',    furi:'わらう',     type:'godan'},
-  {dict:'手伝う',  furi:'てつだう',   type:'godan'},
-  {dict:'会う',    furi:'あう',       type:'godan'},
-  {dict:'払う',    furi:'はらう',     type:'godan'},
-  {dict:'思う',    furi:'おもう',     type:'godan'},
-  {dict:'言う',    furi:'いう',       type:'godan'},
+  {dict:'買う',    furi:'かう',       type:'godan', en:'to buy'},
+  {dict:'使う',    furi:'つかう',     type:'godan', en:'to use'},
+  {dict:'習う',    furi:'ならう',     type:'godan', en:'to learn / practice'},
+  {dict:'歌う',    furi:'うたう',     type:'godan', en:'to sing'},
+  {dict:'笑う',    furi:'わらう',     type:'godan', en:'to laugh / smile'},
+  {dict:'手伝う',  furi:'てつだう',   type:'godan', en:'to help / assist'},
+  {dict:'会う',    furi:'あう',       type:'godan', en:'to meet'},
+  {dict:'払う',    furi:'はらう',     type:'godan', en:'to pay'},
+  {dict:'思う',    furi:'おもう',     type:'godan', en:'to think / feel'},
+  {dict:'言う',    furi:'いう',       type:'godan', en:'to say'},
   // ── GODAN る (godan) ──
-  {dict:'帰る',    furi:'かえる',     type:'godan'},
-  {dict:'取る',    furi:'とる',       type:'godan'},
-  {dict:'乗る',    furi:'のる',       type:'godan'},
-  {dict:'知る',    furi:'しる',       type:'godan'},
-  {dict:'作る',    furi:'つくる',     type:'godan'},
-  {dict:'切る',    furi:'きる',       type:'godan'},
-  {dict:'送る',    furi:'おくる',     type:'godan'},
-  {dict:'走る',    furi:'はしる',     type:'godan'},
-  {dict:'終わる',  furi:'おわる',     type:'godan'},
-  {dict:'泊まる',  furi:'とまる',     type:'godan'},
+  {dict:'帰る',    furi:'かえる',     type:'godan', en:'to return home'},
+  {dict:'取る',    furi:'とる',       type:'godan', en:'to take / get'},
+  {dict:'乗る',    furi:'のる',       type:'godan', en:'to ride / board'},
+  {dict:'知る',    furi:'しる',       type:'godan', en:'to know'},
+  {dict:'作る',    furi:'つくる',     type:'godan', en:'to make / create'},
+  {dict:'切る',    furi:'きる',       type:'godan', en:'to cut'},
+  {dict:'送る',    furi:'おくる',     type:'godan', en:'to send'},
+  {dict:'走る',    furi:'はしる',     type:'godan', en:'to run'},
+  {dict:'終わる',  furi:'おわる',     type:'godan', en:'to end / finish'},
+  {dict:'泊まる',  furi:'とまる',     type:'godan', en:'to stay overnight'},
   // ── GODAN む ──
-  {dict:'飲む',    furi:'のむ',       type:'godan'},
-  {dict:'読む',    furi:'よむ',       type:'godan'},
-  {dict:'住む',    furi:'すむ',       type:'godan'},
-  {dict:'休む',    furi:'やすむ',     type:'godan'},
-  {dict:'頼む',    furi:'たのむ',     type:'godan'},
-  {dict:'楽しむ',  furi:'たのしむ',   type:'godan'},
+  {dict:'飲む',    furi:'のむ',       type:'godan', en:'to drink'},
+  {dict:'読む',    furi:'よむ',       type:'godan', en:'to read'},
+  {dict:'住む',    furi:'すむ',       type:'godan', en:'to live (in a place)'},
+  {dict:'休む',    furi:'やすむ',     type:'godan', en:'to rest / take time off'},
+  {dict:'頼む',    furi:'たのむ',     type:'godan', en:'to ask / request'},
+  {dict:'楽しむ',  furi:'たのしむ',   type:'godan', en:'to enjoy'},
   // ── GODAN ぶ ──
-  {dict:'遊ぶ',    furi:'あそぶ',     type:'godan'},
-  {dict:'呼ぶ',    furi:'よぶ',       type:'godan'},
-  {dict:'運ぶ',    furi:'はこぶ',     type:'godan'},
-  {dict:'選ぶ',    furi:'えらぶ',     type:'godan'},
+  {dict:'遊ぶ',    furi:'あそぶ',     type:'godan', en:'to play'},
+  {dict:'呼ぶ',    furi:'よぶ',       type:'godan', en:'to call / invite'},
+  {dict:'運ぶ',    furi:'はこぶ',     type:'godan', en:'to carry / transport'},
+  {dict:'選ぶ',    furi:'えらぶ',     type:'godan', en:'to choose / select'},
   // ── GODAN ぬ ──
-  {dict:'死ぬ',    furi:'しぬ',       type:'godan'},
+  {dict:'死ぬ',    furi:'しぬ',       type:'godan', en:'to die'},
   // ── IRREGULAR ──
-  {dict:'する',      furi:'する',         type:'suru'},
-  {dict:'くる',      furi:'くる',         type:'kuru'},
-  {dict:'勉強する',  furi:'べんきょうする', type:'suru-cpd'},
-  {dict:'運動する',  furi:'うんどうする',   type:'suru-cpd'},
-  {dict:'料理する',  furi:'りょうりする',   type:'suru-cpd'},
-  {dict:'電話する',  furi:'でんわする',     type:'suru-cpd'},
-  {dict:'掃除する',  furi:'そうじする',     type:'suru-cpd'},
-  {dict:'練習する',  furi:'れんしゅうする', type:'suru-cpd'},
+  {dict:'する',      furi:'する',         type:'suru',     en:'to do'},
+  {dict:'くる',      furi:'くる',         type:'kuru',     en:'to come'},
+  {dict:'勉強する',  furi:'べんきょうする', type:'suru-cpd', en:'to study'},
+  {dict:'運動する',  furi:'うんどうする',   type:'suru-cpd', en:'to exercise'},
+  {dict:'料理する',  furi:'りょうりする',   type:'suru-cpd', en:'to cook'},
+  {dict:'電話する',  furi:'でんわする',     type:'suru-cpd', en:'to phone / call'},
+  {dict:'掃除する',  furi:'そうじする',     type:'suru-cpd', en:'to clean'},
+  {dict:'練習する',  furi:'れんしゅうする', type:'suru-cpd', en:'to practice'},
 ];
 
 // Which VERBS belong to which subgroup (for Stage 1 question selection)
@@ -1143,6 +1180,7 @@ function displayQuestion() {
 
   document.getElementById('vcDict').textContent = item.verb.dict;
   document.getElementById('vcFuri').textContent = item.verb.furi;
+  document.getElementById('vcDef').textContent  = item.verb.en || '';
   document.getElementById('vcCue').textContent  = item.cue;
 
   const vc = document.getElementById('verbCard');
@@ -1159,13 +1197,12 @@ function displayQuestion() {
   preview.textContent = ''; preview.className = 'romaji-preview';
   D.answered = false;
   inp.oninput = () => {
+    if (D.answered) return;
     const raw = inp.value;
-    if (!raw || D.answered) { preview.textContent=''; preview.className='romaji-preview'; return; }
-    try {
-      const hira = wanakana.toHiragana(raw, { IMEMode: true });
-      preview.textContent = hira;
-      preview.className = 'romaji-preview visible';
-    } catch(e) { preview.textContent=''; preview.className='romaji-preview'; }
+    if (!raw) { preview.textContent=''; preview.className='romaji-preview'; return; }
+    const hira = romajiToHiragana(raw);
+    preview.textContent = hira;
+    preview.className = hira !== raw ? 'romaji-preview visible' : 'romaji-preview';
   };
   inp.onkeydown = e => { if (e.key === 'Enter') checkAnswer(); };
 }
@@ -1372,6 +1409,7 @@ function openModal(groupId) {
 
   document.getElementById('modalEyebrow').textContent  = isNew ? 'New Form Unlocked' : 'Form Reference';
   document.getElementById('modalTitle').textContent    = target.form.name;
+  document.getElementById('modalUsage').textContent    = target.form.usage || '';
   document.getElementById('modalSubtitle').textContent = target.group.name;
 
   let exHTML = '<div class="modal-examples">';
