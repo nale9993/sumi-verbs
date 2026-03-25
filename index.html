@@ -76,7 +76,8 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .home-hero h1 em{font-style:italic;color:var(--amber)}
 .home-rule{width:48px;height:2px;background:var(--amber);margin:18px 0;opacity:.6}
 .home-hero p{color:var(--text-dim);font-size:.88rem;letter-spacing:.03em}
-.section-label{font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim);margin:32px 0 12px}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim);margin:24px 0 12px}
+.section-divider{border:none;border-top:1px solid var(--border);margin:28px 0 0}
 
 /* SRS PANEL */
 .srs-panel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px 24px}
@@ -163,7 +164,7 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
 /* INPUT */
 .input-area{display:flex;flex-direction:column;gap:8px}
-.preview-row{height:44px;position:relative;display:flex;align-items:center;justify-content:center}
+.preview-row{height:36px;position:relative;display:flex;align-items:center;justify-content:center}
 .romaji-preview{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Noto Serif JP',serif;font-size:1.35rem;color:var(--amber);letter-spacing:.08em;transition:opacity .15s;opacity:0;text-align:center}
 .romaji-preview.visible{opacity:1}
 .correct-answer{position:absolute;inset:0;display:none;align-items:center;justify-content:center;animation:fadeUp .2s ease}
@@ -178,8 +179,8 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .submit-btn.btn-next{background:var(--bg3);border-color:var(--border);color:var(--amber)}
 .submit-btn.btn-next:hover{background:var(--amber);border-color:var(--amber);color:#0e0c0a}
 .feedback{display:none}
-.drill-bottom{margin-top:auto;padding-top:12px;display:flex;flex-direction:column;align-items:center;gap:8px;border-top:1px solid var(--border)}
-.drill-progress{display:flex;gap:2px;align-items:center;width:100%;max-width:280px}
+.drill-bottom{padding:10px 0 16px;display:flex;flex-direction:column;align-items:center;gap:6px;border-top:1px solid var(--border)}
+.drill-progress{display:flex;gap:2px;align-items:center;width:120px}
 .progress-pip{flex:1;min-width:4px;max-width:14px;height:2px;border-radius:2px;background:var(--bg3);transition:background .3s}
 .progress-pip.correct{background:var(--green)}
 .progress-pip.wrong{background:var(--red)}
@@ -257,7 +258,8 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     <div class="form-grid" id="formGrid"></div>
   </div>
 
-  <div id="srsSection" style="display:none;margin-top:8px">
+  <div id="srsSection" style="display:none">
+    <div class="section-divider"></div>
     <div class="section-label">SRS Review</div>
     <div class="srs-panel">
       <div class="srs-chips-row" id="srsChips"></div>
@@ -814,10 +816,11 @@ function startPhase2() {
 function initDrillView(total, startIndex) {
   const pc = document.getElementById('drillProgress');
   pc.innerHTML = '';
+  // Scale container: 6px per pip + 2px gap, capped at full width
+  pc.style.width = Math.min(total * 8, 200) + 'px';
   for (let i = 0; i < total; i++) {
     const pip = document.createElement('div');
     pip.className = 'progress-pip';
-    // Restore pip color if this question was already answered
     if (D.results[i]) pip.classList.add(D.results[i]);
     pc.appendChild(pip);
   }
@@ -1206,7 +1209,14 @@ function displayQuestion() {
   ia.style.display = 'flex';
 
   const inp = document.getElementById('answerInput');
-  inp.value = ''; inp.className = 'answer-input'; inp.focus();
+  inp.value = ''; inp.className = 'answer-input';
+  // On mobile, scroll the verb card to the top of the viewport when keyboard opens
+  inp.onfocus = () => {
+    setTimeout(() => {
+      document.getElementById('verbCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  };
+  inp.focus();
   document.getElementById('feedback').className = 'feedback';
   document.getElementById('correctAnswer').className = 'correct-answer';
   const btn = document.getElementById('submitBtn');
