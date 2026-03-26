@@ -39,7 +39,7 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .view.active{display:flex;animation:fadeUp .2s ease}
 
 /* LEARN BANNER */
-.learn-banner{display:none;margin-top:24px;margin-bottom:8px;background:linear-gradient(135deg,rgba(201,138,58,.1),rgba(201,138,58,.04));border:1px solid var(--amber-dim);border-radius:8px;padding:18px 22px;gap:16px;align-items:center;animation:fadeUp .3s ease}
+.learn-banner{display:flex;background:linear-gradient(135deg,rgba(201,138,58,.1),rgba(201,138,58,.04));border:1px solid var(--amber-dim);border-radius:8px;padding:18px 22px;gap:16px;align-items:center;animation:fadeUp .3s ease}
 .learn-banner.visible{display:flex}
 .learn-banner-icon{font-size:1.4rem;flex-shrink:0}
 .learn-banner-body{flex:1}
@@ -76,8 +76,8 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .home-hero h1 em{font-style:italic;color:var(--amber)}
 .home-rule{width:48px;height:2px;background:var(--amber);margin:18px 0;opacity:.6}
 .home-hero p{color:var(--text-dim);font-size:.88rem;letter-spacing:.03em}
-.section-label{font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim);margin:24px 0 12px}
-.section-divider{border:none;border-top:1px solid var(--border);margin:28px 0 0}
+.section-label{font-family:'IBM Plex Mono',monospace;font-size:.63rem;letter-spacing:.28em;text-transform:uppercase;color:var(--text-dim);margin:16px 0 12px}
+.section-divider{border:none;border-top:1px solid var(--border);margin:36px 0 0}
 
 /* SRS PANEL */
 .srs-panel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px 24px}
@@ -243,18 +243,22 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     <div class="home-rule"></div>
   </div>
 
-  <div class="learn-banner" id="learnBanner">
-    <div class="learn-banner-icon">📖</div>
-    <div class="learn-banner-body">
-      <div class="learn-banner-label">New Unlock</div>
-      <div class="learn-banner-title" id="bannerTitle"></div>
-      <div class="learn-banner-sub">Study this pattern before you drill it.</div>
+  <div id="learnSection" style="display:none">
+    <div class="section-label">Learn</div>
+    <div class="learn-banner" id="learnBanner">
+      <div class="learn-banner-icon">📖</div>
+      <div class="learn-banner-body">
+        <div class="learn-banner-label">New Unlock</div>
+        <div class="learn-banner-title" id="bannerTitle"></div>
+        <div class="learn-banner-sub">Study this pattern before you drill it.</div>
+      </div>
+      <button class="learn-banner-btn" onclick="openModal()">Study Now</button>
     </div>
-    <button class="learn-banner-btn" onclick="openModal()">Study Now</button>
   </div>
 
   <div id="learningSection">
-    <div class="section-label">In Progress</div>
+    <div class="section-divider"></div>
+    <div class="section-label">Study</div>
     <div class="form-grid" id="formGrid"></div>
   </div>
 
@@ -1455,12 +1459,12 @@ function getPendingCard() {
 
 function updateBanner() {
   const p = getPendingCard();
-  const banner = document.getElementById('learnBanner');
+  const learnSection = document.getElementById('learnSection');
   if (p) {
     document.getElementById('bannerTitle').textContent = `${p.form.name} — ${p.group.name}`;
-    banner.classList.add('visible');
+    learnSection.style.display = 'block';
   } else {
-    banner.classList.remove('visible');
+    learnSection.style.display = 'none';
   }
 }
 
