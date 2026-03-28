@@ -431,32 +431,25 @@ const FORMS = [
     groups:[
       { id:'nai-ru', name:'Ichidan verbs',
         body:`<p><strong>Ichidan rule:</strong> Drop the final る — the stem never changes — then add ない: 食べる → 食べ → 食べない.</p>`,
-        examples:[{from:'食べる',to:'食べない',en:"don't eat"},{from:'見る',to:'見ない',en:"don't see"},{from:'起きる',to:'起きない',en:"don't wake up"},{from:'寝る',to:'寝ない',en:"don't sleep"}],
-        altExamples:[{from:'食べる',to:'食べて',en:'(please) eat'},{from:'見る',to:'見て',en:'(please) see'},{from:'起きる',to:'起きて',en:'waking up'}]},
+        examples:[{from:'食べる',to:'食べない',en:"don't eat"},{from:'見る',to:'見ない',en:"don't see"},{from:'起きる',to:'起きない',en:"don't wake up"},{from:'寝る',to:'寝ない',en:"don't sleep"}]},
       { id:'nai-ku', name:'Godan: く → かない',
-        body:`<p><strong>Godan rule:</strong> Shift く to か (あ-row) and add ない: 書く → 書かない. 行く → 行かない is regular here — the て-form exception only affects the て-form.</p>`,
-        examples:[{from:'書く',to:'書かない',en:"don't write"},{from:'聞く',to:'聞かない',en:"don't listen"},{from:'歩く',to:'歩かない',en:"don't walk"},{from:'行く',to:'行かない',en:"don't go"}],
-        altExamples:[{from:'書く',to:'書いて',en:'please write'},{from:'聞く',to:'聞いて',en:'please listen'},{from:'行く ⚠',to:'行って',en:'going (て exception!)'}]},
+        body:`<p><strong>Godan rule:</strong> Shift く to か (あ-row) and add ない: 書く → 書かない. 行く → 行かない follows the same あ-row rule — no exceptions here.</p>`,
+        examples:[{from:'書く',to:'書かない',en:"don't write"},{from:'聞く',to:'聞かない',en:"don't listen"},{from:'歩く',to:'歩かない',en:"don't walk"},{from:'行く',to:'行かない',en:"don't go"}]},
       { id:'nai-gu', name:'Godan: ぐ → がない',
         body:`<p><strong>Godan rule:</strong> Shift ぐ to が (あ-row) and add ない: 泳ぐ → 泳がない.</p>`,
-        examples:[{from:'泳ぐ',to:'泳がない',en:"don't swim"},{from:'急ぐ',to:'急がない',en:"don't hurry"},{from:'脱ぐ',to:'脱がない',en:"don't take off"},{from:'稼ぐ',to:'稼がない',en:"don't earn"}],
-        altExamples:[{from:'泳ぐ',to:'泳いで',en:'swimming'},{from:'急ぐ',to:'急いで',en:'please hurry'},{from:'脱ぐ',to:'脱いで',en:'taking off'}]},
+        examples:[{from:'泳ぐ',to:'泳がない',en:"don't swim"},{from:'急ぐ',to:'急がない',en:"don't hurry"},{from:'脱ぐ',to:'脱がない',en:"don't take off"},{from:'稼ぐ',to:'稼がない',en:"don't earn"}]},
       { id:'nai-su', name:'Godan: す → さない',
         body:`<p><strong>Godan rule:</strong> Shift す to さ (あ-row) and add ない: 話す → 話さない.</p>`,
-        examples:[{from:'話す',to:'話さない',en:"don't speak"},{from:'貸す',to:'貸さない',en:"don't lend"},{from:'探す',to:'探さない',en:"don't search"},{from:'消す',to:'消さない',en:"don't turn off"}],
-        altExamples:[{from:'話す',to:'話して',en:'please speak'},{from:'貸す',to:'貸して',en:'please lend'},{from:'消す',to:'消して',en:'please turn off'}]},
+        examples:[{from:'話す',to:'話さない',en:"don't speak"},{from:'貸す',to:'貸さない',en:"don't lend"},{from:'探す',to:'探さない',en:"don't search"},{from:'消す',to:'消さない',en:"don't turn off"}]},
       { id:'nai-tsu', name:'Godan: つ・う・る (わ rule)',
         body:`<p><strong>Godan rule:</strong> Shift to あ-row + ない: つ→たない, godan-る→らない. <strong>⚠ Critical:</strong> う shifts to わ, not あ: 買う → 買わない.</p>`,
-        examples:[{from:'待つ',to:'待たない',en:"don't wait"},{from:'買う',to:'買わない',en:"don't buy (わ!)"},{from:'取る',to:'取らない',en:"don't take"},{from:'帰る ⚠',to:'帰らない',en:"don't go home (godan!)"}],
-        altExamples:[{from:'待つ',to:'待って',en:'please wait'},{from:'買う',to:'買って',en:'buying'},{from:'帰る ⚠',to:'帰って',en:'going home (godan!)'}]},
+        examples:[{from:'待つ',to:'待たない',en:"don't wait"},{from:'買う',to:'買わない',en:"don't buy (わ!)"},{from:'取る',to:'取らない',en:"don't take"},{from:'帰る ⚠',to:'帰らない',en:"don't go home (godan!)"}]},
       { id:'nai-mu', name:'Godan: ぬ・ぶ・む',
         body:`<p><strong>Godan rule:</strong> Shift to あ-row + ない: ぬ→なない, ぶ→ばない, む→まない.</p>`,
-        examples:[{from:'飲む',to:'飲まない',en:"don't drink"},{from:'読む',to:'読まない',en:"don't read"},{from:'遊ぶ',to:'遊ばない',en:"don't play"},{from:'死ぬ',to:'死なない',en:"don't die"}],
-        altExamples:[{from:'飲む',to:'飲んで',en:'please drink'},{from:'読む',to:'読んで',en:'please read'},{from:'遊ぶ',to:'遊んで',en:'playing'}]},
+        examples:[{from:'飲む',to:'飲まない',en:"don't drink"},{from:'読む',to:'読まない',en:"don't read"},{from:'遊ぶ',to:'遊ばない',en:"don't play"},{from:'死ぬ',to:'死なない',en:"don't die"}]},
       { id:'nai-irr', name:'Irregular verbs: する・くる',
         body:`<p><strong>Irregular:</strong> する → しない, くる → こない. All する-compounds follow: 勉強しない, 運動しない.</p>`,
-        examples:[{from:'する',to:'しない',en:"don't do"},{from:'くる',to:'こない',en:"don't come"},{from:'勉強する',to:'勉強しない',en:"don't study"},{from:'運動する',to:'運動しない',en:"don't exercise"}],
-        altExamples:[{from:'する',to:'して',en:'doing / please do'},{from:'くる',to:'きて',en:'coming / please come'},{from:'勉強する',to:'勉強して',en:'please study'}]},
+        examples:[{from:'する',to:'しない',en:"don't do"},{from:'くる',to:'こない',en:"don't come"},{from:'勉強する',to:'勉強しない',en:"don't study"},{from:'運動する',to:'運動しない',en:"don't exercise"}]},
     ]
   },
 
@@ -1669,8 +1662,24 @@ function showResults(data) {
 
   const verdict = document.getElementById('resultsVerdict');
   if (data.type === 'phase1') {
-    verdict.textContent = pct >= 90 ? 'Great work — keep drilling to unlock the next group.' : 'Keep going — one more pass unlocks the next group.';
-    verdict.className = 'results-verdict ' + (pct >= 90 ? 'pass' : 'fail');
+    const ph1Pass = data.correct >= 9;
+    const st = getState(data.formId);
+    const form = FORMS.find(f => f.id === data.formId);
+    let msg;
+    if (!ph1Pass) {
+      msg = 'Score 9 or more to build consecutive passes. Two in a row unlocks the next subgroup.';
+    } else if (st.consecutivePasses === 1) {
+      msg = 'One more pass like that and the next subgroup unlocks.';
+    } else if (!st.allGroupsUnlocked) {
+      const newGroup = form.groups[st.unlockedGroupIds.length - 1];
+      msg = `New subgroup unlocked: ${newGroup.name}. Study the lesson, then drill again.`;
+    } else if (st.finalCooldownUntil) {
+      msg = 'All subgroups cleared — final review opens in 12 hours.';
+    } else {
+      msg = 'Great work — keep drilling to stay sharp.';
+    }
+    verdict.textContent = msg;
+    verdict.className = 'results-verdict ' + (ph1Pass ? 'pass' : 'fail');
   } else if (data.type === 'final') {
     verdict.textContent = passed ? '★ Moved to SRS — next form unlocked!' : 'Not quite — review again and try the final when ready.';
     verdict.className = 'results-verdict ' + (passed ? 'pass' : 'fail');
