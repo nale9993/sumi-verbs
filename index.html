@@ -361,8 +361,6 @@ header{padding:28px 0 0;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 
 </div><!-- /app -->
 <script>
-let introSeen   = LS('sv-is')  || false;
-
 // ════════════════════════════════════════════
 // VERB TYPE INTRO
 // ════════════════════════════════════════════
@@ -707,6 +705,7 @@ let readCards   = LS('sv-rc')  || [];
 let globalSt    = LS('sv-gl')  || { p2CooldownUntil: 0, p2LastExcludedId: null };
 let stats       = LS('sv-st')  || { total: 0, today: 0, lastDate: '' };
 let savedSess   = LS('sv-ss')  || null;
+let introSeen   = LS('sv-is')  || false;
 
 function saveAll() {
   SS('sv-fs', formStates); SS('sv-rc', readCards);
