@@ -1517,21 +1517,49 @@ function displayQuestion() {
 function buildSessionQueue(form, count) {
   const st = getState(form.id);
   const groups = st ? form.groups.filter(g => st.unlockedGroupIds.includes(g.id)) : [form.groups[0]];
-  const used = new Set();
+
+  // --- Pre-allocate group slots deterministically ---
+  const slots = [];
+
+  if (groups.length === 1) {
+    // Only one group: fill all slots from it
+    for (let i = 0; i < count; i++) slots.push(groups[0]);
+  } else if (count === 10) {
+    // Phase 1: newest group gets exactly min(5, poolSize) slots, rest distributed round-robin among older groups
+    const newest = groups[groups.length - 1];
+    const others = groups.slice(0, -1);
+    const newestSlots = Math.min(5, getVerbsForGroup(newest.id).length);
+    for (let i = 0; i < newestSlots; i++) slots.push(newest);
+    for (let i = 0; i < count - newestSlots; i++) slots.push(others[i % others.length]);
+  } else {
+    // Final review: distribute evenly across all groups, extras go to newest-first
+    const base = Math.floor(count / groups.length);
+    const extra = count % groups.length;
+    for (let gi = 0; gi < groups.length; gi++) {
+      const n = base + (gi >= groups.length - extra ? 1 : 0);
+      for (let i = 0; i < n; i++) slots.push(groups[gi]);
+    }
+  }
+
+  // Shuffle the slot order
+  for (let i = slots.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [slots[i], slots[j]] = [slots[j], slots[i]];
+  }
+
+  // Pick one unique verb per slot (per-group tracking, cycles if pool exhausted)
+  const usedPerGroup = {};
   const queue = [];
 
-  for (let i = 0; i < count; i++) {
-    // 50% weight to newest group
-    const group = (groups.length > 1 && Math.random() < 0.5)
-      ? groups[groups.length - 1]
-      : groups[Math.floor(Math.random() * groups.length)];
-
-    const pool   = getVerbsForGroup(group.id);
-    const unused = pool.filter(v => !used.has(v.furi));
-    const verb   = (unused.length ? unused : pool)[Math.floor(Math.random() * (unused.length || pool.length))];
+  for (const group of slots) {
+    if (!usedPerGroup[group.id]) usedPerGroup[group.id] = new Set();
+    const used = usedPerGroup[group.id];
+    const pool = getVerbsForGroup(group.id);
+    let unused = pool.filter(v => !used.has(v.furi));
+    if (!unused.length) { used.clear(); unused = [...pool]; }
+    const verb = unused[Math.floor(Math.random() * unused.length)];
     used.add(verb.furi);
 
-    // Pick conjugation: randomly from conjugForms if defined, else default
     const conjOptions = group.conjugForms || [formIdForGroup(group.id)];
     const conj = conjOptions[Math.floor(Math.random() * conjOptions.length)];
     const kana = conjugate(verb, conj);
@@ -1546,7 +1574,7 @@ function buildPhase2SessionQueue() {
   const config = buildPhase2Queue(); // existing logic for which forms/how many questions
   if (!config) return null;
 
-  const used = new Set();
+  const usedPerGroup = {}; // groupId -> Set of furi strings
   const queue = [];
 
   for (const qi of config.queue) {
@@ -1557,9 +1585,16 @@ function buildPhase2SessionQueue() {
     const conjOptions = group.conjugForms || [formIdForGroup(group.id)];
     const conj = conjOptions[Math.floor(Math.random() * conjOptions.length)];
 
-    const pool   = getVerbsForGroup(group.id);
-    const unused = pool.filter(v => !used.has(v.furi));
-    const verb   = (unused.length ? unused : pool)[Math.floor(Math.random() * (unused.length || pool.length))];
+    if (!usedPerGroup[group.id]) usedPerGroup[group.id] = new Set();
+    const used = usedPerGroup[group.id];
+
+    const pool = getVerbsForGroup(group.id);
+    let unused = pool.filter(v => !used.has(v.furi));
+    if (!unused.length) {
+      used.clear();
+      unused = pool;
+    }
+    const verb = unused[Math.floor(Math.random() * unused.length)];
     used.add(verb.furi);
 
     const kana = conjugate(verb, conj);
